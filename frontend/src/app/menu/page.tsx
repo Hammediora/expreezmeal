@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { UtensilsCrossed } from 'lucide-react'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import MenuCard from '@/components/MenuCard'
@@ -166,14 +165,26 @@ export default function MenuPage() {
             <>
               {filteredItems.length === 0 ? (
                 <div className="text-center py-20">
-                  <UtensilsCrossed className="w-16 h-16 text-neutral-400 mx-auto mb-4" />
+                  <svg
+                    className="w-16 h-16 text-neutral-400 mx-auto mb-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 011-1h1a2 2 0 011 1v1M9 7V6a2 2 0 011-1h1a2 2 0 011 1v1"
+                    />
+                  </svg>
                   <h3 className="text-xl font-semibold text-neutral-600 mb-2">No items found</h3>
                   <p className="text-neutral-500">
                     Try selecting a different category or check back later.
                   </p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 auto-rows-fr">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {filteredItems.map((item, index) => (
                     <motion.div
                       key={item.id}
@@ -206,7 +217,7 @@ export default function MenuPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="pt-20 pb-16 bg-gradient-to-br from-amber-50 via-orange-50 to-red-50">
+      <section className="pt-20 pb-16 bg-neutral-50">
         <div className="container-custom text-center">
           <motion.div
             initial={{ opacity: 0, y: 50 }}
@@ -222,22 +233,10 @@ export default function MenuPage() {
               you find the perfect meal.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <motion.button 
-                onClick={() => setIsChefModalOpen(true)}
-                className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold px-8 py-4 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center gap-3"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <span className="text-xl">👨‍🍳</span>
+              <button className="btn-primary" onClick={() => setIsChefModalOpen(true)}>
                 Chef&apos;s Recommendations
-              </motion.button>
-              <motion.button 
-                className="bg-white text-amber-600 font-semibold px-8 py-4 rounded-xl border-2 border-amber-200 hover:border-amber-300 hover:bg-amber-50 transition-all duration-300 shadow-lg hover:shadow-xl"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                Contact Us for Help
-              </motion.button>
+              </button>
+              <button className="btn-secondary">Contact Us for Help</button>
             </div>
           </motion.div>
         </div>
@@ -253,7 +252,7 @@ export default function MenuPage() {
         onAddToCart={handleModalAddToCart}
       />
 
-      {/* Chef's Recommendations Modal */}
+      {/* Chef Recommendations Modal */}
       <ChefRecommendationsModal
         isOpen={isChefModalOpen}
         onClose={() => setIsChefModalOpen(false)}

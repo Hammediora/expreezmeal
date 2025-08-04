@@ -187,6 +187,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }
 
   const getSubtotal = () => {
+    // Prices are already in cents from the API, so we don't need to convert
     return state.items.reduce((sum, item) => {
       const itemTotal = (item.price + (item.total_customization_cost || 0)) * item.quantity
       return sum + itemTotal
@@ -194,10 +195,12 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }
 
   const getTax = () => {
-    return getSubtotal() * APP_CONFIG.TAX_RATE // US sales tax
+    // getSubtotal() returns cents, so tax calculation maintains cents
+    return Math.round(getSubtotal() * APP_CONFIG.TAX_RATE)
   }
 
   const getTotal = () => {
+    // Both subtotal and tax are in cents
     return getSubtotal() + getTax()
   }
 

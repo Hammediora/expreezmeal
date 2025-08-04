@@ -144,6 +144,20 @@ export interface CheckoutFormData {
   tip_amount?: number
 }
 
+// Simple customer info for pickup orders
+export interface PickupCustomerInfo {
+  name: string
+  phone: string
+  email?: string
+}
+
+export interface PickupCheckoutFormData {
+  customer: PickupCustomerInfo
+  payment_method: string
+  special_instructions?: string
+  tip_amount?: number
+}
+
 // Component Props Types
 export interface PageProps {
   params: { [key: string]: string | string[] | undefined }

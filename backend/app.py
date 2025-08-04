@@ -10,6 +10,7 @@ import redis
 import stripe
 from functools import wraps
 from datetime import datetime
+from email_service import email_service
 
 # Load environment variables before using them
 load_dotenv()
@@ -172,6 +173,10 @@ def shopping_cart_address():
 def shopping_cart_new_address():
     return render_template('shopping-cart-new-address.html')
 
+@app.route('/admin/email-test')
+def admin_email_test():
+    return render_template('admin_email_test.html')
+
 # ============= API ROUTES FOR FRONTEND =============
 
 @app.route('/api/health')
@@ -213,8 +218,8 @@ def get_menu_items():
             'category_id': item.category_id,
             'name': item.name,
             'description': item.description,
-            'price': float(item.price) / 100,  # Convert cents to dollars
-            'sale_price': float(item.sale_price) / 100 if item.sale_price else None,  # Convert cents to dollars
+            'price': int(float(item.price) * 100),  # Convert dollars to cents for frontend
+            'sale_price': int(float(item.sale_price) * 100) if item.sale_price else None,  # Convert dollars to cents for frontend
             'image_url': item.image_url,
             'is_featured': item.is_featured,
             'preparation_time': item.preparation_time,
@@ -230,7 +235,7 @@ def get_menu_items():
                 'choices': [{
                     'id': choice.id,
                     'name': choice.name,
-                    'price_modifier': float(choice.price_modifier) / 100,  # Convert cents to dollars
+                    'price_modifier': int(float(choice.price_modifier) * 100),  # Convert dollars to cents for frontend
                     'is_default': choice.is_default,
                     'display_order': choice.display_order
                 } for choice in sorted(opt.option_choices, key=lambda x: x.display_order)]
@@ -249,8 +254,8 @@ def get_featured_items():
             'category_id': item.category_id,
             'name': item.name,
             'description': item.description,
-            'price': float(item.price) / 100,  # Convert cents to dollars
-            'sale_price': float(item.sale_price) / 100 if item.sale_price else None,  # Convert cents to dollars
+            'price': int(float(item.price) * 100),  # Convert dollars to cents for frontend
+            'sale_price': int(float(item.sale_price) * 100) if item.sale_price else None,  # Convert dollars to cents for frontend
             'image_url': item.image_url,
             'is_available': item.is_available,
             'is_featured': item.is_featured,
@@ -267,7 +272,7 @@ def get_featured_items():
                 'choices': [{
                     'id': choice.id,
                     'name': choice.name,
-                    'price_modifier': float(choice.price_modifier) / 100,  # Convert cents to dollars
+                    'price_modifier': int(float(choice.price_modifier) * 100),  # Convert dollars to cents for frontend
                     'is_default': choice.is_default,
                     'display_order': choice.display_order
                 } for choice in option.option_choices]
@@ -383,6 +388,8 @@ def create_payment_intent():
             metadata={
                 'order_id': data.get('order_id', ''),
                 'customer_email': data.get('customer_email', ''),
+                'customer_name': data.get('customer_name', ''),
+                'customer_phone': data.get('customer_phone', ''),
             }
         )
 
@@ -420,7 +427,7 @@ def create_order():
                 return jsonify({'error': f'Menu item not found: {item_data["menu_item_id"]}'}), 404
 
             quantity = item_data.get('quantity', 1)
-            unit_price = menu_item.price  # Price in cents
+            unit_price = int(float(menu_item.price) * 100)  # Convert dollars to cents
 
             # Calculate customization costs
             customization_cost = 0
@@ -430,11 +437,11 @@ def create_order():
                 for custom in item_data['customizations']:
                     option_choice = OptionChoice.query.get(custom['option_choice_id'])
                     if option_choice:
-                        customization_cost += option_choice.price_modifier
+                        customization_cost += int(float(option_choice.price_modifier) * 100)  # Convert dollars to cents
                         customizations_data.append({
                             'customization_option_id': custom['customization_option_id'],
                             'option_choice_id': custom['option_choice_id'],
-                            'price_modifier': option_choice.price_modifier
+                            'price_modifier': int(float(option_choice.price_modifier) * 100)  # Store in cents
                         })
 
             total_unit_price = unit_price + customization_cost
@@ -452,20 +459,25 @@ def create_order():
 
         # Calculate tax and total
         tax_rate = 0.08875  # 8.875% tax rate (adjust as needed)
-        tax_amount = int(subtotal * tax_rate)
+        tax_amount = int(subtotal * tax_rate)  # Now subtotal is in cents (integer)
         tip_amount = data.get('tip_amount', 0)
         total_amount = subtotal + tax_amount + tip_amount
 
+        # Convert cents back to dollars for database storage (Order model expects Decimal)
+        from decimal import Decimal
+        subtotal_dollars = Decimal(str(subtotal / 100))
+        tax_dollars = Decimal(str(tax_amount / 100))
+        tip_dollars = Decimal(str(tip_amount / 100))
+        total_dollars = Decimal(str(total_amount / 100))
+
         # Create order
         new_order = Order(
-            customer_name=data['delivery_address'].get('name', 'Guest'),
-            customer_email=data['delivery_address'].get('email', ''),
-            customer_phone=data['delivery_address'].get('phone', ''),
-            delivery_address=f"{data['delivery_address']['address_line1']}, {data['delivery_address']['city']}, {data['delivery_address']['state']} {data['delivery_address']['postal_code']}",
-            subtotal=subtotal,
-            tax_amount=tax_amount,
-            tip_amount=tip_amount,
-            total_amount=total_amount,
+            user_id=None,  # No user authentication yet
+            order_type='PICKUP',  # Since this is pickup only
+            subtotal=subtotal_dollars,
+            tax=tax_dollars,
+            tip=tip_dollars,
+            total=total_dollars,
             status='PENDING',
             special_instructions=data.get('special_instructions', '')
         )
@@ -475,12 +487,16 @@ def create_order():
 
         # Create order items
         for item_data in order_items_data:
+            # Convert cents to dollars for database storage
+            unit_price_dollars = Decimal(str(item_data['unit_price'] / 100))
+            total_price_dollars = Decimal(str(item_data['total_price'] / 100))
+
             order_item = OrderItem(
                 order_id=new_order.id,
                 menu_item_id=item_data['menu_item_id'],
                 quantity=item_data['quantity'],
-                unit_price=item_data['unit_price'],
-                total_price=item_data['total_price'],
+                unit_price=unit_price_dollars,
+                total_price=total_price_dollars,
                 special_instructions=item_data['special_instructions']
             )
             db.session.add(order_item)
@@ -488,18 +504,21 @@ def create_order():
 
             # Create customizations
             for custom_data in item_data['customizations']:
+                # Convert price modifier from cents to dollars
+                price_modifier_dollars = Decimal(str(custom_data['price_modifier'] / 100))
+
                 customization = OrderItemCustomization(
                     order_item_id=order_item.id,
                     customization_option_id=custom_data['customization_option_id'],
                     option_choice_id=custom_data['option_choice_id'],
-                    price_modifier=custom_data['price_modifier']
+                    price_modifier=price_modifier_dollars
                 )
                 db.session.add(customization)
 
         # Create payment record
         payment = Payment(
             order_id=new_order.id,
-            amount=total_amount,
+            amount=total_dollars,  # Use the dollar amount instead of cents
             payment_method=data['payment_method'],
             payment_status='PENDING'
         )
@@ -552,6 +571,54 @@ def confirm_payment(order_id):
 
         db.session.commit()
 
+        # Automatically send confirmation email if customer email is in metadata
+        customer_email = intent.metadata.get('customer_email')
+        customer_name = intent.metadata.get('customer_name', 'Customer')
+        
+        if customer_email:
+            try:
+                # Prepare order data for email
+                order_items = []
+                for item in order.order_items:
+                    menu_item = MenuItem.query.get(item.menu_item_id)
+                    customizations = []
+                    
+                    for custom in item.customizations:
+                        option = CustomizationOption.query.get(custom.customization_option_id)
+                        choice = OptionChoice.query.get(custom.option_choice_id)
+                        if option and choice:
+                            customizations.append(f"{option.name}: {choice.name}")
+                    
+                    order_items.append({
+                        'name': menu_item.name if menu_item else 'Item',
+                        'quantity': item.quantity,
+                        'price': float(item.total_price),
+                        'customizations': ', '.join(customizations) if customizations else ''
+                    })
+
+                order_data = {
+                    'order_id': order_id,
+                    'status': order.status,
+                    'subtotal': int(float(order.subtotal) * 100),  # Convert to cents
+                    'tax_amount': int(float(order.tax) * 100),  # Convert to cents
+                    'total_amount': int(float(order.total) * 100),  # Convert to cents
+                    'items': order_items
+                }
+
+                customer_info = {
+                    'name': customer_name,
+                    'email': customer_email,
+                    'phone': intent.metadata.get('customer_phone', '')
+                }
+
+                # Send confirmation email
+                email_service.send_order_confirmation(order_data, customer_info)
+                print(f"✅ Confirmation email sent to {customer_email} for order {order_id}")
+                
+            except Exception as email_error:
+                print(f"❌ Failed to send confirmation email: {email_error}")
+                # Don't fail the payment confirmation if email fails
+
         return jsonify({
             'order_id': order_id,
             'status': 'CONFIRMED',
@@ -560,6 +627,263 @@ def confirm_payment(order_id):
 
     except stripe.error.StripeError as e:
         return jsonify({'error': str(e)}), 400
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/orders/<order_id>/send-confirmation', methods=['POST'])
+def send_order_confirmation(order_id):
+    """Send order confirmation email"""
+    try:
+        # Get order details
+        order = Order.query.get(order_id)
+        if not order:
+            return jsonify({'error': 'Order not found'}), 404
+
+        data = request.get_json()
+        customer_email = data.get('email')
+        customer_name = data.get('name', 'Customer')
+        customer_phone = data.get('phone', '')
+        
+        if not customer_email:
+            return jsonify({'error': 'Email address required'}), 400
+
+        # Prepare order data for email
+        order_items = []
+        for item in order.order_items:
+            menu_item = MenuItem.query.get(item.menu_item_id)
+            customizations = []
+            
+            for custom in item.customizations:
+                option = CustomizationOption.query.get(custom.customization_option_id)
+                choice = OptionChoice.query.get(custom.option_choice_id)
+                if option and choice:
+                    customizations.append(f"{option.name}: {choice.name}")
+            
+            order_items.append({
+                'name': menu_item.name if menu_item else 'Item',
+                'quantity': item.quantity,
+                'price': float(item.total_price),
+                'customizations': ', '.join(customizations) if customizations else ''
+            })
+
+        order_data = {
+            'order_id': order_id,
+            'status': order.status,
+            'subtotal': int(float(order.subtotal) * 100),  # Convert to cents
+            'tax_amount': int(float(order.tax) * 100),  # Convert to cents
+            'total_amount': int(float(order.total) * 100),  # Convert to cents
+            'items': order_items
+        }
+
+        customer_info = {
+            'name': customer_name,
+            'email': customer_email,
+            'phone': customer_phone
+        }
+
+        # Send email using the email service
+        success = email_service.send_order_confirmation(order_data, customer_info)
+        
+        if success:
+            return jsonify({
+                'message': 'Confirmation email sent successfully',
+                'email': customer_email
+            })
+        else:
+            return jsonify({'error': 'Failed to send email'}), 500
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/orders/<order_id>/update-status', methods=['POST'])
+def update_order_status(order_id):
+    """Update order status and send notification email"""
+    try:
+        data = request.get_json()
+        new_status = data.get('status')
+        customer_email = data.get('customer_email')
+        customer_name = data.get('customer_name', 'Customer')
+        
+        if not new_status:
+            return jsonify({'error': 'Status is required'}), 400
+            
+        # Valid statuses
+        valid_statuses = ['PENDING', 'CONFIRMED', 'PREPARING', 'READY', 'COMPLETED', 'CANCELLED']
+        if new_status not in valid_statuses:
+            return jsonify({'error': f'Invalid status. Must be one of: {valid_statuses}'}), 400
+
+        # Update order status
+        order = Order.query.get(order_id)
+        if not order:
+            return jsonify({'error': 'Order not found'}), 404
+
+        order.status = new_status
+        order.updated_at = datetime.utcnow()
+        db.session.commit()
+
+        # Send email notification if customer email is provided
+        if customer_email:
+            order_data = {
+                'order_id': order_id,
+                'status': new_status,
+                'total_amount': int(float(order.total) * 100)  # Convert to cents
+            }
+
+            customer_info = {
+                'name': customer_name,
+                'email': customer_email
+            }
+
+            email_service.send_order_status_update(order_data, customer_info, new_status)
+
+        return jsonify({
+            'order_id': order_id,
+            'status': new_status,
+            'message': f'Order status updated to {new_status}'
+        })
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/menu-items/notify-new', methods=['POST'])
+def notify_new_menu_item():
+    """Notify customers about new menu item"""
+    try:
+        data = request.get_json()
+        item_id = data.get('item_id')
+        customer_emails = data.get('customer_emails', [])
+        
+        if not item_id:
+            return jsonify({'error': 'item_id is required'}), 400
+            
+        if not customer_emails:
+            return jsonify({'error': 'customer_emails list is required'}), 400
+
+        # Get menu item details
+        menu_item = MenuItem.query.get(item_id)
+        if not menu_item:
+            return jsonify({'error': 'Menu item not found'}), 404
+
+        item_data = {
+            'name': menu_item.name,
+            'description': menu_item.description,
+            'price': int(float(menu_item.price) * 100),  # Convert to cents
+            'image_url': menu_item.image_url or '/images/menu/default.jpg'
+        }
+
+        # Send notifications
+        success = email_service.send_new_menu_item_notification(item_data, customer_emails)
+        
+        if success:
+            return jsonify({
+                'message': f'New menu item notifications sent to {len(customer_emails)} customers',
+                'item_name': menu_item.name
+            })
+        else:
+            return jsonify({'error': 'Failed to send notifications'}), 500
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/test-email', methods=['POST'])
+def test_email():
+    """Test email functionality"""
+    try:
+        data = request.get_json()
+        test_email = data.get('email', 'hammedbello97@gmail.com')
+        
+        # Test order data
+        order_data = {
+            'order_id': 'TEST-123',
+            'status': 'CONFIRMED',
+            'subtotal': 1200,  # $12.00 in cents
+            'tax_amount': 107,  # $1.07 in cents
+            'total_amount': 1307,  # $13.07 in cents
+            'items': [
+                {
+                    'name': 'Chicken Shawarma',
+                    'quantity': 1,
+                    'price': 12.00,
+                    'customizations': 'Extra sauce, No onions'
+                }
+            ]
+        }
+        
+        customer_info = {
+            'name': 'Test Customer',
+            'email': test_email,
+            'phone': '+1234567890'
+        }
+        
+        # Send test email
+        success = email_service.send_order_confirmation(order_data, customer_info)
+        
+        if success:
+            return jsonify({
+                'message': 'Test email sent successfully!',
+                'email': test_email
+            })
+        else:
+            return jsonify({'error': 'Failed to send test email'}), 500
+            
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/update-order-status', methods=['POST'])
+def update_order_status_api():
+    """Update order status and send notification email (for admin dashboard)"""
+    try:
+        data = request.get_json()
+        
+        # Extract data
+        order_id = data.get('order_id')
+        customer_email = data.get('customer_email')
+        customer_name = data.get('customer_name', 'Customer')
+        new_status = data.get('new_status')
+        
+        if not all([order_id, customer_email, new_status]):
+            return jsonify({'error': 'Missing required fields'}), 400
+        
+        # For testing purposes, create mock order data
+        order_data = {
+            'order_id': order_id,
+            'status': new_status,
+            'subtotal': 1299,  # $12.99 in cents
+            'tax_amount': 130,  # $1.30 in cents  
+            'total_amount': 1429,  # $14.29 in cents
+            'items': [
+                {
+                    'name': 'Shawarma',
+                    'quantity': 1,
+                    'price': 12.99,
+                    'customizations': 'Extra sauce'
+                }
+            ]
+        }
+        
+        customer_info = {
+            'name': customer_name,
+            'email': customer_email,
+            'phone': data.get('customer_phone', '')
+        }
+        
+        # Send status update email
+        success = email_service.send_order_status_update(order_data, customer_info, new_status)
+        
+        if success:
+            return jsonify({
+                'message': f'Status update email sent to {customer_email}',
+                'order_id': order_id,
+                'new_status': new_status
+            })
+        else:
+            return jsonify({'error': 'Failed to send status update email'}), 500
+            
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

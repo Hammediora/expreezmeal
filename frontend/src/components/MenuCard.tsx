@@ -108,10 +108,12 @@ const MenuCard = ({
           </h3>
           <div className="flex flex-col items-end">
             {hasDiscount && (
-              <span className="text-sm text-neutral-500 line-through">${price.toFixed(2)}</span>
+              <span className="text-sm text-neutral-500 line-through">
+                ${(price / 100).toFixed(2)}
+              </span>
             )}
             <span className="text-xl sm:text-2xl font-bold text-emerald-600">
-              ${displayPrice.toFixed(2)}
+              ${(displayPrice / 100).toFixed(2)}
             </span>
             {hasCustomizations && (
               <span className="text-xs text-blue-600 font-medium">from this price</span>

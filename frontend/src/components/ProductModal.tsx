@@ -126,7 +126,7 @@ export default function ProductModal({
             <div className="flex items-center justify-between">
               <span className="text-neutral-700 font-medium">Base Price:</span>
               <span className="text-2xl font-bold text-emerald-600">
-                ${menuItem.price.toFixed(2)}
+                ${(menuItem.price / 100).toFixed(2)}
               </span>
             </div>
           </div>
@@ -164,7 +164,7 @@ export default function ProductModal({
                           <span className="font-medium text-neutral-800">{choice.name}</span>
                           {choice.price_modifier && choice.price_modifier > 0 && (
                             <span className="text-base font-bold text-emerald-600 bg-emerald-100 px-2 py-1 rounded-full">
-                              +${choice.price_modifier.toFixed(2)}
+                              +${(choice.price_modifier / 100).toFixed(2)}
                             </span>
                           )}
                         </div>
@@ -217,7 +217,7 @@ export default function ProductModal({
             <div className="text-right">
               <div className="text-sm text-neutral-600 mb-1">Total:</div>
               <div className="text-2xl font-bold text-emerald-600">
-                ${calculateTotalPrice().toFixed(2)}
+                ${(calculateTotalPrice() / 100).toFixed(2)}
               </div>
             </div>
           </div>
@@ -228,7 +228,7 @@ export default function ProductModal({
             className="w-full bg-gradient-to-r from-emerald-600 to-emerald-700 text-white py-4 px-6 rounded-xl font-bold text-lg hover:from-emerald-700 hover:to-emerald-800 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"
           >
             <ShoppingCart size={20} />
-            Add to Cart - ${calculateTotalPrice().toFixed(2)}
+            Add to Cart - ${(calculateTotalPrice() / 100).toFixed(2)}
           </button>
         </div>
       </div>

@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ExpreeZmeal Admin - Email Testing</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .section h2 {
+            color: #333;
+            margin-top: 0;
+        }
+        input, select, textarea, button {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover {
+            background: #5a67d8;
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+            font-weight: bold;
+            color: #333;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🍳 ExpreeZmeal Email Testing Dashboard</h1>
+        
+        <!-- Test Order Confirmation Email -->
+        <div class="section">
+            <h2>📧 Test Order Confirmation Email</h2>
+            <label for="testEmail">Email Address:</label>
+            <input type="email" id="testEmail" placeholder="Enter email address" value="hammedbello97@gmail.com">
+            <button onclick="sendTestEmail()">Send Test Order Confirmation</button>
+            <div id="testEmailResult" class="result"></div>
+        </div>
+        
+        <!-- Update Order Status -->
+        <div class="section">
+            <h2>🔄 Update Order Status</h2>
+            <label for="orderId">Order ID:</label>
+            <input type="text" id="orderId" placeholder="Order ID (e.g., TEST-123)">
+            <label for="customerEmail">Customer Email:</label>
+            <input type="email" id="customerEmail" placeholder="Customer Email">
+            <label for="customerName">Customer Name:</label>
+            <input type="text" id="customerName" placeholder="Customer Name" value="Customer">
+            <label for="orderStatus">Order Status:</label>
+            <select id="orderStatus" title="Select order status" aria-label="Order Status">
+                <option value="PENDING">PENDING</option>
+                <option value="CONFIRMED">CONFIRMED</option>
+                <option value="PREPARING">PREPARING</option>
+                <option value="READY">READY</option>
+                <option value="COMPLETED">COMPLETED</option>
+                <option value="CANCELLED">CANCELLED</option>
+            </select>
+            <button onclick="updateOrderStatus()">Send Status Update Email</button>
+            <div id="statusUpdateResult" class="result"></div>
+        </div>
+        
+        <!-- New Menu Item Notification -->
+        <div class="section">
+            <h2>🆕 Send New Menu Item Notification</h2>
+            <label for="menuItemId">Menu Item:</label>
+            <select id="menuItemId" title="Select menu item" aria-label="Menu Item">
+                <option value="">Select a menu item...</option>
+            </select>
+            <label for="customerEmails">Customer Emails:</label>
+            <textarea id="customerEmails" placeholder="Enter customer emails (one per line)">hammedbello97@gmail.com</textarea>
+            <button onclick="sendNewItemNotification()">Send New Item Notifications</button>
+            <div id="newItemResult" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        // Load menu items for dropdown
+        async function loadMenuItems() {
+            try {
+                const response = await fetch('/api/menu-items');
+                const items = await response.json();
+                const select = document.getElementById('menuItemId');
+                
+                items.forEach(item => {
+                    const option = document.createElement('option');
+                    option.value = item.id;
+                    option.textContent = `${item.name} - $${(item.price / 100).toFixed(2)}`;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading menu items:', error);
+            }
+        }
+        
+        // Send test email
+        async function sendTestEmail() {
+            const email = document.getElementById('testEmail').value;
+            const resultDiv = document.getElementById('testEmailResult');
+            
+            if (!email) {
+                showResult(resultDiv, 'Please enter an email address', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/test-email', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email: email })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showResult(resultDiv, `✅ Test email sent successfully to ${email}!`, 'success');
+                } else {
+                    showResult(resultDiv, `❌ Error: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                showResult(resultDiv, `❌ Network error: ${error.message}`, 'error');
+            }
+        }
+        
+        // Update order status
+        async function updateOrderStatus() {
+            const orderId = document.getElementById('orderId').value;
+            const customerEmail = document.getElementById('customerEmail').value;
+            const customerName = document.getElementById('customerName').value;
+            const status = document.getElementById('orderStatus').value;
+            const resultDiv = document.getElementById('statusUpdateResult');
+            
+            if (!orderId || !customerEmail || !customerName) {
+                showResult(resultDiv, 'Please fill in all required fields', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/update-order-status', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        order_id: orderId,
+                        customer_email: customerEmail,
+                        customer_name: customerName,
+                        new_status: status
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showResult(resultDiv, `✅ Status update email sent to ${customerEmail}!`, 'success');
+                } else {
+                    showResult(resultDiv, `❌ Error: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                showResult(resultDiv, `❌ Network error: ${error.message}`, 'error');
+            }
+        }
+        
+        // Send new menu item notification
+        async function sendNewItemNotification() {
+            const menuItemId = document.getElementById('menuItemId').value;
+            const customerEmails = document.getElementById('customerEmails').value;
+            const resultDiv = document.getElementById('newItemResult');
+            
+            if (!menuItemId) {
+                showResult(resultDiv, 'Please select a menu item', 'error');
+                return;
+            }
+            
+            if (!customerEmails.trim()) {
+                showResult(resultDiv, 'Please enter at least one email address', 'error');
+                return;
+            }
+            
+            // Parse emails (one per line)
+            const emails = customerEmails.split('\n').map(email => email.trim()).filter(email => email.length > 0);
+            
+            try {
+                const response = await fetch('/api/new-menu-item-notification', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        menu_item_id: parseInt(menuItemId),
+                        customer_emails: emails
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showResult(resultDiv, `✅ New menu item notifications sent to ${emails.length} customer(s)!`, 'success');
+                } else {
+                    showResult(resultDiv, `❌ Error: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                showResult(resultDiv, `❌ Network error: ${error.message}`, 'error');
+            }
+        }
+        
+        // Helper function to show results
+        function showResult(element, message, type) {
+            element.textContent = message;
+            element.className = `result ${type}`;
+            element.style.display = 'block';
+        }
+        
+        // Load menu items when page loads
+        document.addEventListener('DOMContentLoaded', loadMenuItems);
+    </script>
+</body>
+</html>

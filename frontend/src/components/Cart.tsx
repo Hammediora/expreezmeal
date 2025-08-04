@@ -7,6 +7,7 @@ import Image from 'next/image'
 import { X, ShoppingCart, Trash2, Plus, Minus, ImageOff } from 'lucide-react'
 import { CartItem, APP_CONFIG } from '@/types'
 import { formatCurrency } from '@/lib/api'
+import { useCart } from '@/context/CartContext'
 
 interface CartProps {
   isOpen: boolean
@@ -27,18 +28,12 @@ const Cart = ({
 }: CartProps) => {
   const router = useRouter()
   const [isProcessingCheckout, setIsProcessingCheckout] = useState(false)
+  const { getSubtotal, getTax, getTotal } = useCart()
 
-  const subtotal = items.reduce((sum, item) => {
-    const customizationCost =
-      item.customizations?.reduce(
-        (customSum, custom) => customSum + (custom.price_modifier || 0),
-        0
-      ) || 0
-    const itemTotalPrice = item.price * item.quantity + customizationCost * item.quantity
-    return sum + itemTotalPrice
-  }, 0)
-  const tax = subtotal * APP_CONFIG.TAX_RATE // US sales tax
-  const total = subtotal + tax
+  // Use cart context functions for consistency - they handle cents properly
+  const subtotal = getSubtotal() // returns cents
+  const tax = getTax() // returns cents
+  const total = getTotal() // returns cents
 
   const handleCheckout = async () => {
     setIsProcessingCheckout(true)

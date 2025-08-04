@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Order Ready for Pickup! 🎉</h2>
+
+<p>Hi {{ customer_name }},</p>
+
+<p>Great news! Your ExpreeZmeal order is ready and waiting for you!</p>
+
+<div class="info-box">
+    <h3>📋 Pickup Details</h3>
+    <p><strong>Order ID:</strong> #{{ order_id }}</p>
+    <p><strong>Ready Time:</strong> {{ ready_time }}</p>
+    <p><strong>Total:</strong> ${{ "%.2f"|format(total_amount / 100) }}</p>
+</div>
+
+<div class="pickup-location">
+    <h3>📍 Pickup Location</h3>
+    <p><strong>ExpreeZmeal Kitchen</strong></p>
+    <p>{{ pickup_address.street }}<br>{{ pickup_address.city }}, {{ pickup_address.state }} {{ pickup_address.zip }}</p>
+    <p>📞 {{ pickup_address.phone }}</p>
+</div>
+
+<div class="warning-box">
+    <h3 class="warning-title">⏰ Please Pick Up Soon!</h3>
+    <p class="warning-text">Your order will be kept warm for 15 minutes. After that, quality may be affected.</p>
+</div>
+
+<div class="center-text">
+    <p class="thank-you-message">Thank you for choosing ExpreeZmeal! 🙏</p>
+</div>
+{% endblock %}

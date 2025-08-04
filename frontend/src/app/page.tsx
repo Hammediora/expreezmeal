@@ -8,35 +8,40 @@ import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import MenuCard from '@/components/MenuCard'
 import ProductModal from '@/components/ProductModal'
-import { apiClient, handleApiError } from '@/lib/api'
+import ChefRecommendationsModal from '@/components/ChefRecommendationsModal'
+import { apiClient as api, handleApiError } from '@/lib/api'
 import { MenuItem, CartItemCustomization } from '@/types'
 import { useCart } from '@/context/CartContext'
 import { ApiError } from 'next/dist/server/api-utils'
 
 export default function Home() {
   const [featuredItems, setFeaturedItems] = useState<MenuItem[]>([])
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isChefModalOpen, setIsChefModalOpen] = useState(false)
   const { addItem } = useCart()
 
   useEffect(() => {
-    const fetchFeaturedItems = async () => {
+    const fetchData = async () => {
       try {
-        console.log('Fetching featured items...')
-        const items = await apiClient.getFeaturedItems()
-        console.log('Featured items received:', items)
-        setFeaturedItems(items)
+        setLoading(true)
+        const [featuredResponse, menuResponse] = await Promise.all([
+          api.getFeaturedItems(),
+          api.getMenuItems(),
+        ])
+        setFeaturedItems(featuredResponse)
+        setMenuItems(menuResponse)
       } catch (err) {
-        console.error('Error fetching featured items:', err)
         setError(handleApiError(err as ApiError))
       } finally {
         setLoading(false)
       }
     }
 
-    fetchFeaturedItems()
+    fetchData()
   }, [])
 
   const handleCardClick = (itemId: string) => {
@@ -95,10 +100,11 @@ export default function Home() {
           >
             <span className="block mb-2">
               <span className="bg-gradient-to-r from-white via-yellow-200 to-white bg-clip-text text-transparent drop-shadow-2xl">
-                Taste the 
+                Taste the
               </span>
               <span className="bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 bg-clip-text text-transparent drop-shadow-2xl animate-pulse">
-                {" "}Elegance
+                {' '}
+                Elegance
               </span>
             </span>
             <span className="block">
@@ -139,10 +145,7 @@ export default function Home() {
             transition={{ duration: 0.8, delay: 0.4 }}
             className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center"
           >
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <Link
                 href="/menu"
                 className="relative overflow-hidden bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 hover:from-orange-600 hover:via-red-600 hover:to-pink-600 text-white font-bold text-xl px-10 py-5 rounded-xl transition-all duration-300 hover:shadow-2xl transform hover:-translate-y-2 w-full sm:w-auto text-center group"
@@ -155,11 +158,22 @@ export default function Home() {
                 <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
               </Link>
             </motion.div>
-            
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
+
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <button
+                onClick={() => setIsChefModalOpen(true)}
+                className="relative overflow-hidden bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 hover:from-emerald-600 hover:via-teal-600 hover:to-cyan-600 text-white font-bold text-xl px-10 py-5 rounded-xl transition-all duration-300 hover:shadow-2xl transform hover:-translate-y-2 w-full sm:w-auto text-center group"
+              >
+                <span className="relative z-10 flex items-center justify-center gap-2">
+                  <Award className="w-5 h-5" />
+                  CHEF&apos;S PICKS
+                  <Award className="w-5 h-5" />
+                </span>
+                <div className="absolute inset-0 bg-gradient-to-r from-green-400 via-emerald-500 to-teal-500 opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
+              </button>
+            </motion.div>
+
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <Link
                 href="/menu"
                 className="relative overflow-hidden bg-transparent border-2 border-yellow-400 text-white hover:bg-gradient-to-r hover:from-yellow-400/20 hover:via-orange-400/20 hover:to-yellow-400/20 font-bold text-xl px-10 py-5 rounded-xl transition-all duration-300 hover:shadow-2xl transform hover:-translate-y-2 w-full sm:w-auto text-center group"
@@ -231,19 +245,22 @@ export default function Home() {
                 <Flame className="w-4 h-4" />
               </span>
             </motion.div>
-            
+
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-display font-bold mb-6">
               <span className="bg-gradient-to-r from-orange-600 via-red-600 to-pink-600 bg-clip-text text-transparent">
-                Featured 
+                Featured
               </span>
               <span className="text-primary-800"> Dishes</span>
             </h2>
-            
+
             <p className="text-lg sm:text-xl text-primary-600 max-w-3xl mx-auto leading-relaxed">
               <span className="font-semibold bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent">
                 Discover our most popular and signature items
               </span>
-              <span>, crafted with the finest ingredients and authentic Nigerian flavors that will make your taste buds dance!</span>
+              <span>
+                , crafted with the finest ingredients and authentic Nigerian flavors that will make
+                your taste buds dance!
+              </span>
             </p>
           </motion.div>
 
@@ -295,7 +312,7 @@ export default function Home() {
           <div className="absolute bottom-10 right-10 w-32 h-32 bg-orange-400/20 rounded-full animate-bounce"></div>
           <div className="absolute top-1/2 left-1/4 w-16 h-16 bg-red-400/20 rounded-full animate-ping"></div>
         </div>
-        
+
         <div className="container-custom text-center relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 50 }}
@@ -316,35 +333,35 @@ export default function Home() {
                 <Star className="w-12 h-12 text-yellow-300 animate-bounce" />
               </div>
             </motion.div>
-            
+
             <h2 className="text-4xl md:text-5xl font-display font-bold mb-6">
               <span className="bg-gradient-to-r from-yellow-200 via-white to-yellow-200 bg-clip-text text-transparent">
-                Ready to Experience 
+                Ready to Experience
               </span>
               <br />
               <span className="bg-gradient-to-r from-green-300 via-emerald-400 to-green-300 bg-clip-text text-transparent">
                 Nigerian Luxury?
               </span>
             </h2>
-            
+
             <p className="text-xl mb-8 max-w-2xl mx-auto">
               <span className="bg-gradient-to-r from-yellow-200 to-orange-200 bg-clip-text text-transparent font-semibold">
                 Join thousands of satisfied customers
               </span>
-              <span className="text-white/95"> who have made ExpreeZmeal their go-to destination for </span>
+              <span className="text-white/95">
+                {' '}
+                who have made ExpreeZmeal their go-to destination for{' '}
+              </span>
               <span className="bg-gradient-to-r from-green-300 to-emerald-400 bg-clip-text text-transparent font-bold">
                 authentic Nigerian cuisine
               </span>
               <span className="text-white/95">!</span>
             </p>
-            
+
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Link 
-                  href="/menu" 
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Link
+                  href="/menu"
                   className="bg-gradient-to-r from-green-500 via-emerald-600 to-green-500 hover:from-green-600 hover:via-emerald-700 hover:to-green-600 text-white font-bold text-xl px-10 py-4 rounded-xl transition-all duration-300 hover:shadow-2xl transform hover:-translate-y-1 inline-flex items-center gap-2"
                 >
                   <Rocket className="w-5 h-5" />
@@ -353,7 +370,7 @@ export default function Home() {
                 </Link>
               </motion.div>
             </div>
-            
+
             {/* Additional trust indicators */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -387,6 +404,13 @@ export default function Home() {
         onClose={closeModal}
         menuItem={selectedItem}
         onAddToCart={handleModalAddToCart}
+      />
+
+      {/* Chef's Picks Modal */}
+      <ChefRecommendationsModal
+        isOpen={isChefModalOpen}
+        onClose={() => setIsChefModalOpen(false)}
+        menuItems={menuItems}
       />
     </div>
   )

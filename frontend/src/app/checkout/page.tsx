@@ -3,14 +3,13 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
-import { Check } from 'lucide-react'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import StripeProvider from '@/components/StripeProvider'
 import PaymentForm from '@/components/PaymentForm'
 import { useCart } from '@/context/CartContext'
 import { formatCurrency } from '@/lib/api'
-import { CheckoutFormData } from '@/types'
+import { PickupCheckoutFormData, PickupCustomerInfo } from '@/types'
 
 export default function CheckoutPage() {
   const router = useRouter()
@@ -21,18 +20,11 @@ export default function CheckoutPage() {
   const [clientSecret, setClientSecret] = useState<string>('')
   const [orderId, setOrderId] = useState<string>('')
 
-  const [formData, setFormData] = useState<CheckoutFormData>({
-    delivery_address: {
-      id: '',
-      user_id: '',
-      address_line1: '',
-      address_line2: '',
-      city: '',
-      state: '',
-      postal_code: '',
-      country: 'United States',
-      is_default: true,
-      address_type: 'PICKUP',
+  const [formData, setFormData] = useState<PickupCheckoutFormData>({
+    customer: {
+      name: '',
+      phone: '',
+      email: '',
     },
     payment_method: 'card',
     special_instructions: '',
@@ -51,13 +43,13 @@ export default function CheckoutPage() {
   ) => {
     const { name, value } = e.target
 
-    if (name.startsWith('address.')) {
-      const addressField = name.split('.')[1]
+    if (name.startsWith('customer.')) {
+      const customerField = name.split('.')[1] as keyof PickupCustomerInfo
       setFormData(prev => ({
         ...prev,
-        delivery_address: {
-          ...prev.delivery_address,
-          [addressField]: value,
+        customer: {
+          ...prev.customer,
+          [customerField]: value,
         },
       }))
     } else {
@@ -70,10 +62,10 @@ export default function CheckoutPage() {
 
   const validateStep1 = () => {
     // For pickup, we only need customer contact info (name and phone)
-    const { delivery_address } = formData
+    const { customer } = formData
     return (
-      delivery_address.address_line1 && // Customer name
-      delivery_address.city // Customer phone
+      customer.name && // Customer name
+      customer.phone // Customer phone
     )
   }
 
@@ -88,7 +80,8 @@ export default function CheckoutPage() {
 
     try {
       const tipAmount = formData.tip_amount ?? 0
-      const totalAmountCents = Math.round((getTotal() + tipAmount) * 100)
+      // getTotal() already returns cents, and tipAmount should be in cents too
+      const tipAmountCents = Math.round(tipAmount * 100) // Convert tip from dollars to cents
 
       const orderData = {
         items: items.map(item => ({
@@ -98,14 +91,13 @@ export default function CheckoutPage() {
           customizations: item.customizations || [],
         })),
         delivery_address: {
-          ...formData.delivery_address,
-          name: formData.delivery_address.address_line1, // Customer name
-          email: formData.delivery_address.address_line2 || 'customer@expreezmeal.com',
-          phone: formData.delivery_address.city, // Customer phone
+          name: formData.customer.name,
+          email: formData.customer.email || 'customer@expreezmeal.com',
+          phone: formData.customer.phone,
         },
         payment_method: formData.payment_method,
         special_instructions: formData.special_instructions,
-        tip_amount: Math.round(tipAmount * 100),
+        tip_amount: tipAmountCents, // Tip in cents
       }
 
       // Create order
@@ -126,6 +118,7 @@ export default function CheckoutPage() {
       setOrderId(order.order_id)
 
       // Create payment intent
+      const totalWithTipCents = getTotal() + tipAmountCents // Both are in cents
       const paymentResponse = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/stripe/create-payment-intent`,
         {
@@ -134,10 +127,12 @@ export default function CheckoutPage() {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            amount: totalAmountCents,
+            amount: totalWithTipCents, // Amount in cents for Stripe
             currency: 'usd',
             order_id: order.order_id,
-            customer_email: formData.delivery_address.address_line2 || 'customer@expreezmeal.com',
+            customer_email: formData.customer.email || 'customer@expreezmeal.com',
+            customer_name: formData.customer.name,
+            customer_phone: formData.customer.phone,
           }),
         }
       )
@@ -177,6 +172,7 @@ export default function CheckoutPage() {
         throw new Error(errorData.error || 'Failed to confirm payment')
       }
 
+      // Payment confirmed - email will be sent automatically by backend
       clearCart()
       router.push(`/order-confirmation?orderId=${orderId}`)
     } catch (err) {
@@ -188,10 +184,11 @@ export default function CheckoutPage() {
     setError(error)
   }
 
-  const subtotal = getSubtotal()
-  const tax = getTax()
-  const tipAmount = formData.tip_amount ?? 0
-  const finalTotal = getTotal() + tipAmount
+  const subtotal = getSubtotal() // in cents
+  const tax = getTax() // in cents
+  const tipAmount = formData.tip_amount ?? 0 // in dollars
+  const tipAmountCents = Math.round(tipAmount * 100) // convert to cents
+  const finalTotal = getTotal() + tipAmountCents // both in cents
 
   if (items.length === 0) {
     return null
@@ -311,8 +308,8 @@ export default function CheckoutPage() {
                         </label>
                         <input
                           type="text"
-                          name="address.address_line1"
-                          value={formData.delivery_address.address_line1}
+                          name="customer.name"
+                          value={formData.customer.name}
                           onChange={handleInputChange}
                           className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-[#d4af37] focus:border-[#d4af37] transition-colors"
                           placeholder="John Doe"
@@ -326,8 +323,8 @@ export default function CheckoutPage() {
                         </label>
                         <input
                           type="tel"
-                          name="address.city"
-                          value={formData.delivery_address.city}
+                          name="customer.phone"
+                          value={formData.customer.phone}
                           onChange={handleInputChange}
                           className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-[#d4af37] focus:border-[#d4af37] transition-colors"
                           placeholder="(555) 123-4567"
@@ -341,8 +338,8 @@ export default function CheckoutPage() {
                         </label>
                         <input
                           type="email"
-                          name="address.address_line2"
-                          value={formData.delivery_address.address_line2}
+                          name="customer.email"
+                          value={formData.customer.email}
                           onChange={handleInputChange}
                           className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-[#d4af37] focus:border-[#d4af37] transition-colors"
                           placeholder="john@example.com"
@@ -436,7 +433,7 @@ export default function CheckoutPage() {
                         onSuccess={handlePaymentSuccess}
                         onError={handlePaymentError}
                         isLoading={isSubmitting}
-                        amount={Math.round(finalTotal * 100)}
+                        amount={finalTotal} // finalTotal is already in cents
                       />
                     </StripeProvider>
                   </motion.div>
@@ -498,7 +495,7 @@ export default function CheckoutPage() {
                     {tipAmount > 0 && (
                       <div className="flex justify-between text-neutral-600">
                         <span>Tip</span>
-                        <span>{formatCurrency(tipAmount / 100)}</span>
+                        <span>{formatCurrency(tipAmount)}</span>
                       </div>
                     )}
                     <div className="flex justify-between text-lg font-bold text-neutral-800 pt-2 border-t border-neutral-200">
@@ -510,7 +507,13 @@ export default function CheckoutPage() {
                   <div className="mt-6 p-4 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg">
                     <div className="flex items-center space-x-2">
                       <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
-                        <Check className="w-3 h-3 text-white" />
+                        <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                          <path
+                            fillRule="evenodd"
+                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
                       </div>
                       <div>
                         <p className="text-sm font-medium text-green-800">Ready for Pickup</p>

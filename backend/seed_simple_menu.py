@@ -51,14 +51,14 @@ def seed_simple_menu():
             categories[cat_data['name']] = category.id
             print(f"Created category: {cat_data['name']}")
 
-        # Sample Menu Items (prices in USD cents) - Base items with customizations
+        # Sample Menu Items (prices in USD) - Base items with customizations
         menu_items_data = [
             # Shawarma (customizable)
             {
                 'category': 'Shawarma',
                 'name': 'Shawarma',
                 'description': 'Delicious wrapped Middle Eastern-style grilled meat with fresh vegetables and signature sauce. Choose your protein and add-ons.',
-                'price': 1200,  # $12.00 base price (chicken)
+                'price': 12.00,  # $12.00 base price (chicken)
                 'image_url': '/images/menu/chicken-shawarma.jpg',
                 'is_featured': True,
                 'preparation_time': 15,
@@ -71,7 +71,7 @@ def seed_simple_menu():
                 'category': 'Beverages',
                 'name': 'Zobo',
                 'description': 'Refreshing Nigerian herbal drink made with hibiscus leaves and natural spices. Choose your flavor and sweetness level.',
-                'price': 400,  # $4.00 base price
+                'price': 4.00,  # $4.00 base price
                 'image_url': '/images/menu/zobo.jpg',
                 'is_featured': True,
                 'preparation_time': 5,
@@ -84,7 +84,7 @@ def seed_simple_menu():
                 'category': 'Meat Pies',
                 'name': 'Meat Pie',
                 'description': 'Fresh baked flaky pastry with seasoned meat filling.',
-                'price': 800,  # $8.00 base price
+                'price': 8.00,  # $8.00 base price
                 'image_url': '/images/menu/chicken-meat-pie.jpg',
                 'is_featured': True,
                 'preparation_time': 10,
@@ -100,7 +100,7 @@ def seed_simple_menu():
 
             menu_item = MenuItem(**item_data)
             db.session.add(menu_item)
-            print(f"Created menu item: {item_data['name']} - ${item_data['price']/100:.2f}")
+            print(f"Created menu item: {item_data['name']} - ${item_data['price']:.2f}")
 
         # Commit all changes
         db.session.commit()
