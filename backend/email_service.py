@@ -11,14 +11,14 @@ import json
 load_dotenv()
 
 # Initialize Resend with API key from environment
-RESEND_API_KEY = os.getenv("RESEND_API_KEY", "re_aTw9snii_ph6jQgLKNda4Q1waEp68WjBP")
-resend.api_key = RESEND_API_KEY
-
-if not RESEND_API_KEY:
-    print("⚠️  WARNING: RESEND_API_KEY not found in environment variables")
-    print("   Email functionality will not work properly")
+RESEND_API_KEY = os.getenv("RESEND_API_KEY")
+if RESEND_API_KEY:
+    resend.api_key = RESEND_API_KEY
+    print(f"✅ Resend API key loaded successfully")
 else:
-    print(f"✅ Resend API key loaded: {RESEND_API_KEY[:10]}...")
+    print("⚠️  WARNING: RESEND_API_KEY not found in environment variables")
+    print("   Please set RESEND_API_KEY in your .env file")
+    print("   Email functionality will not work properly")
 
 # Setup Jinja2 template environment
 template_dir = os.path.join(os.path.dirname(__file__), 'email_templates')

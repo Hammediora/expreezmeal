@@ -134,7 +134,7 @@ def send_custom_email(self, data: Dict, customer_info: Dict) -> bool:
 
 ### Environment Variables (.env)
 ```
-RESEND_API_KEY=re_aTw9snii_ph6jQgLKNda4Q1waEp68WjBP
+RESEND_API_KEY=re_your_resend_api_key_here
 ```
 
 ### Email Settings
