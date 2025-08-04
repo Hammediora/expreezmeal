@@ -31,7 +31,7 @@ export default function CheckoutPage() {
       postal_code: '',
       country: 'United States',
       is_default: true,
-      address_type: 'PICKUP',
+      address_type: 'DELIVERY',
     },
     payment_method: 'card',
     special_instructions: '',
@@ -68,17 +68,18 @@ export default function CheckoutPage() {
   }
 
   const validateStep1 = () => {
-    // For pickup, we only need customer contact info (name and phone)
     const { delivery_address } = formData
     return (
-      delivery_address.address_line1 && // Customer name
-      delivery_address.city // Customer phone
+      delivery_address.address_line1 &&
+      delivery_address.city &&
+      delivery_address.state &&
+      delivery_address.postal_code
     )
   }
 
   const createOrder = async () => {
     if (!validateStep1()) {
-      setError('Please fill in all required customer information')
+      setError('Please fill in all required address fields')
       return
     }
 
@@ -98,9 +99,9 @@ export default function CheckoutPage() {
         })),
         delivery_address: {
           ...formData.delivery_address,
-          name: formData.delivery_address.address_line1, // Customer name
-          email: formData.delivery_address.address_line2 || 'customer@expreezmeal.com',
-          phone: formData.delivery_address.city, // Customer phone
+          name: 'Customer',
+          email: 'customer@expreezmeal.com',
+          phone: '(555) 123-4567',
         },
         payment_method: formData.payment_method,
         special_instructions: formData.special_instructions,
@@ -136,7 +137,7 @@ export default function CheckoutPage() {
             amount: totalAmountCents,
             currency: 'usd',
             order_id: order.order_id,
-            customer_email: formData.delivery_address.address_line2 || 'customer@expreezmeal.com',
+            customer_email: 'customer@expreezmeal.com',
           }),
         }
       )
@@ -211,7 +212,7 @@ export default function CheckoutPage() {
             >
               <h1 className="text-4xl font-display font-bold text-neutral-800 mb-4">Checkout</h1>
               <p className="text-lg text-neutral-600">
-                Complete your order for pickup - delicious Nigerian cuisine awaits!
+                Complete your order and get ready for delicious Nigerian cuisine!
               </p>
             </motion.div>
 
@@ -219,7 +220,7 @@ export default function CheckoutPage() {
             <div className="flex items-center justify-center mb-12">
               <div className="flex items-center space-x-4">
                 {[
-                  { step: 1, label: 'Customer Info' },
+                  { step: 1, label: 'Delivery Info' },
                   { step: 2, label: 'Payment' },
                   { step: 3, label: 'Confirmation' },
                 ].map(({ step, label }) => (
@@ -268,7 +269,7 @@ export default function CheckoutPage() {
                   </motion.div>
                 )}
 
-                {/* Step 1: Customer Information */}
+                {/* Step 1: Delivery Information */}
                 {currentStep === 1 && (
                   <motion.div
                     initial={{ opacity: 0, x: -20 }}
@@ -276,37 +277,13 @@ export default function CheckoutPage() {
                     className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8"
                   >
                     <h2 className="text-2xl font-display font-bold text-neutral-800 mb-6">
-                      Pickup Information
+                      Delivery Information
                     </h2>
-
-                    <div className="mb-6 p-4 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
-                          <svg
-                            className="w-3 h-3 text-white"
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-green-800">Pickup Location</p>
-                          <p className="text-xs text-green-600">
-                            123 Main Street, New York, NY 10001
-                          </p>
-                        </div>
-                      </div>
-                    </div>
 
                     <div className="space-y-6">
                       <div>
                         <label className="block text-sm font-medium text-neutral-700 mb-2">
-                          Full Name *
+                          Street Address *
                         </label>
                         <input
                           type="text"
@@ -314,37 +291,69 @@ export default function CheckoutPage() {
                           value={formData.delivery_address.address_line1}
                           onChange={handleInputChange}
                           className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-[#d4af37] focus:border-[#d4af37] transition-colors"
-                          placeholder="John Doe"
+                          placeholder="123 Main Street"
                           required
                         />
                       </div>
 
                       <div>
                         <label className="block text-sm font-medium text-neutral-700 mb-2">
-                          Phone Number *
+                          Apartment, suite, etc. (optional)
                         </label>
                         <input
-                          type="tel"
-                          name="address.city"
-                          value={formData.delivery_address.city}
-                          onChange={handleInputChange}
-                          className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-[#d4af37] focus:border-[#d4af37] transition-colors"
-                          placeholder="(555) 123-4567"
-                          required
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-neutral-700 mb-2">
-                          Email (optional)
-                        </label>
-                        <input
-                          type="email"
+                          type="text"
                           name="address.address_line2"
                           value={formData.delivery_address.address_line2}
                           onChange={handleInputChange}
                           className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-[#d4af37] focus:border-[#d4af37] transition-colors"
-                          placeholder="john@example.com"
+                          placeholder="Apartment, suite, etc."
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                          <label className="block text-sm font-medium text-neutral-700 mb-2">
+                            City *
+                          </label>
+                          <input
+                            type="text"
+                            name="address.city"
+                            value={formData.delivery_address.city}
+                            onChange={handleInputChange}
+                            className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-[#d4af37] focus:border-[#d4af37] transition-colors"
+                            placeholder="New York"
+                            required
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-neutral-700 mb-2">
+                            State *
+                          </label>
+                          <input
+                            type="text"
+                            name="address.state"
+                            value={formData.delivery_address.state}
+                            onChange={handleInputChange}
+                            className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-[#d4af37] focus:border-[#d4af37] transition-colors"
+                            placeholder="NY"
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-neutral-700 mb-2">
+                          Postal Code *
+                        </label>
+                        <input
+                          type="text"
+                          name="address.postal_code"
+                          value={formData.delivery_address.postal_code}
+                          onChange={handleInputChange}
+                          className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-[#d4af37] focus:border-[#d4af37] transition-colors"
+                          placeholder="10001"
+                          required
                         />
                       </div>
 
@@ -358,7 +367,7 @@ export default function CheckoutPage() {
                           onChange={handleInputChange}
                           rows={3}
                           className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-[#d4af37] focus:border-[#d4af37] transition-colors"
-                          placeholder="Any special requests for your order..."
+                          placeholder="Any special delivery instructions..."
                         />
                       </div>
 
@@ -371,20 +380,20 @@ export default function CheckoutPage() {
                           value={formData.tip_amount}
                           onChange={handleInputChange}
                           className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-[#d4af37] focus:border-[#d4af37] transition-colors"
-                          title="Select tip amount"
+                          aria-label="Tip Amount"
                         >
                           <option value={0}>No tip</option>
                           <option value={subtotal * 0.15}>
-                            15% - {formatCurrency((subtotal * 0.15) / 100)}
+                            15% - {formatCurrency(subtotal * 0.15)}
                           </option>
                           <option value={subtotal * 0.18}>
-                            18% - {formatCurrency((subtotal * 0.18) / 100)}
+                            18% - {formatCurrency(subtotal * 0.18)}
                           </option>
                           <option value={subtotal * 0.2}>
-                            20% - {formatCurrency((subtotal * 0.2) / 100)}
+                            20% - {formatCurrency(subtotal * 0.2)}
                           </option>
                           <option value={subtotal * 0.25}>
-                            25% - {formatCurrency((subtotal * 0.25) / 100)}
+                            25% - {formatCurrency(subtotal * 0.25)}
                           </option>
                         </select>
                       </div>
@@ -426,7 +435,7 @@ export default function CheckoutPage() {
                         onClick={() => setCurrentStep(1)}
                         className="text-[#d4af37] hover:text-[#c9a632] font-medium transition-colors"
                       >
-                        ← Back to Customer Info
+                        ← Back to Delivery
                       </button>
                     </div>
 
@@ -471,15 +480,7 @@ export default function CheckoutPage() {
                           )}
                         </div>
                         <span className="font-medium text-neutral-800">
-                          {formatCurrency(
-                            (item.price * item.quantity +
-                              (item.customizations?.reduce(
-                                (sum, custom) => sum + (custom.price_modifier || 0),
-                                0
-                              ) || 0) *
-                                item.quantity) /
-                              100
-                          )}
+                          {formatCurrency(item.price * item.quantity)}
                         </span>
                       </div>
                     ))}
@@ -488,21 +489,21 @@ export default function CheckoutPage() {
                   <div className="border-t border-neutral-200 pt-4 space-y-2">
                     <div className="flex justify-between text-neutral-600">
                       <span>Subtotal</span>
-                      <span>{formatCurrency(subtotal / 100)}</span>
+                      <span>{formatCurrency(subtotal)}</span>
                     </div>
                     <div className="flex justify-between text-neutral-600">
                       <span>Tax</span>
-                      <span>{formatCurrency(tax / 100)}</span>
+                      <span>{formatCurrency(tax)}</span>
                     </div>
                     {tipAmount > 0 && (
                       <div className="flex justify-between text-neutral-600">
                         <span>Tip</span>
-                        <span>{formatCurrency(tipAmount / 100)}</span>
+                        <span>{formatCurrency(tipAmount)}</span>
                       </div>
                     )}
                     <div className="flex justify-between text-lg font-bold text-neutral-800 pt-2 border-t border-neutral-200">
                       <span>Total</span>
-                      <span>{formatCurrency(finalTotal / 100)}</span>
+                      <span>{formatCurrency(finalTotal)}</span>
                     </div>
                   </div>
 
@@ -518,8 +519,8 @@ export default function CheckoutPage() {
                         </svg>
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-green-800">Ready for Pickup</p>
-                        <p className="text-xs text-green-600">Order ready in 10-15 minutes</p>
+                        <p className="text-sm font-medium text-green-800">Free Delivery</p>
+                        <p className="text-xs text-green-600">On all orders</p>
                       </div>
                     </div>
                   </div>

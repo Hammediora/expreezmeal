@@ -3,26 +3,34 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
+import { ChevronDown, Star, Clock, DollarSign, Flame, Zap, Award, Rocket } from 'lucide-react'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import MenuCard from '@/components/MenuCard'
+import ProductModal from '@/components/ProductModal'
 import { apiClient, handleApiError } from '@/lib/api'
-import { MenuItem } from '@/types'
+import { MenuItem, CartItemCustomization } from '@/types'
 import { useCart } from '@/context/CartContext'
+import { ApiError } from 'next/dist/server/api-utils'
 
 export default function Home() {
   const [featuredItems, setFeaturedItems] = useState<MenuItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
   const { addItem } = useCart()
 
   useEffect(() => {
     const fetchFeaturedItems = async () => {
       try {
+        console.log('Fetching featured items...')
         const items = await apiClient.getFeaturedItems()
+        console.log('Featured items received:', items)
         setFeaturedItems(items)
       } catch (err) {
-        setError(handleApiError(err))
+        console.error('Error fetching featured items:', err)
+        setError(handleApiError(err as ApiError))
       } finally {
         setLoading(false)
       }
@@ -31,70 +39,177 @@ export default function Home() {
     fetchFeaturedItems()
   }, [])
 
-  const handleAddToCart = (itemId: string) => {
+  const handleCardClick = (itemId: string) => {
     const item = featuredItems.find(item => item.id === itemId)
     if (item) {
-      addItem(item)
+      setSelectedItem(item)
+      setIsModalOpen(true)
     }
+  }
+
+  const handleModalAddToCart = (
+    item: MenuItem,
+    quantity: number,
+    customizations?: CartItemCustomization[],
+    specialInstructions?: string
+  ) => {
+    addItem(item, quantity, customizations, specialInstructions)
+  }
+
+  const closeModal = () => {
+    setIsModalOpen(false)
+    setSelectedItem(null)
   }
 
   return (
     <div className="min-h-screen bg-elegant-cream">
       <Navbar />
-      
+
       {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center bg-hero-pattern bg-cover bg-center bg-no-repeat">
-        <div className="absolute inset-0 bg-elegant-gradient" />
-        <div className="relative z-10 text-center text-white max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+        {/* Video Background */}
+        <video
+          autoPlay
+          muted
+          loop
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover z-0"
+          poster="/images/elegantRestaurat.jpg"
+        >
+          <source src="/videos/shawarma-hero.mp4" type="video/mp4" />
+          <source src="/videos/shawarma-hero.webm" type="video/webm" />
+          {/* Fallback for browsers that don't support video */}
+        </video>
+
+        <div className="absolute inset-0 w-full h-full bg-cover bg-center z-0 elegant-bg-image" />
+
+        {/* Video overlay for better text readability */}
+        <div className="absolute inset-0 bg-elegant-gradient opacity-85 z-10" />
+        <div className="absolute inset-0 bg-black opacity-25 z-10" />
+        <div className="relative z-20 text-center text-white max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.h1
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
             className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-display font-bold mb-6 leading-tight"
           >
-            Taste the Elegance of{' '}
-            <span className="text-secondary-400 drop-shadow-lg">Nigeria</span>
+            <span className="block mb-2">
+              <span className="bg-gradient-to-r from-white via-yellow-200 to-white bg-clip-text text-transparent drop-shadow-2xl">
+                Taste the 
+              </span>
+              <span className="bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 bg-clip-text text-transparent drop-shadow-2xl animate-pulse">
+                {" "}Elegance
+              </span>
+            </span>
+            <span className="block">
+              <span className="text-white drop-shadow-2xl">of </span>
+              <span className="bg-gradient-to-r from-green-400 via-emerald-500 to-green-600 bg-clip-text text-transparent drop-shadow-2xl font-extrabold">
+                Nigeria
+              </span>
+            </span>
           </motion.h1>
-          
+
           <motion.p
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="text-lg sm:text-xl md:text-2xl mb-8 text-white/90 max-w-4xl mx-auto leading-relaxed"
+            className="text-lg sm:text-xl md:text-2xl mb-8 max-w-4xl mx-auto leading-relaxed"
           >
-            Experience premium Nigerian fast-casual dining with our signature shawarma, 
-            refreshing zobo, delicious meat pies, and authentic local snacks.
+            <span className="bg-gradient-to-r from-yellow-200 via-white to-yellow-200 bg-clip-text text-transparent font-semibold drop-shadow-lg">
+              Experience premium Nigerian fast-casual dining
+            </span>
+            <span className="text-white/95 drop-shadow-lg"> with our </span>
+            <span className="bg-gradient-to-r from-orange-300 via-yellow-400 to-orange-300 bg-clip-text text-transparent font-bold">
+              signature shawarma
+            </span>
+            <span className="text-white/95 drop-shadow-lg">, </span>
+            <span className="bg-gradient-to-r from-purple-300 via-pink-400 to-purple-300 bg-clip-text text-transparent font-bold">
+              refreshing zobo
+            </span>
+            <span className="text-white/95 drop-shadow-lg">, and </span>
+            <span className="bg-gradient-to-r from-amber-300 via-yellow-500 to-amber-300 bg-clip-text text-transparent font-bold">
+              delicious meat pies
+            </span>
+            <span className="text-white/95 drop-shadow-lg">.</span>
           </motion.p>
-          
+
           <motion.div
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.4 }}
             className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center"
           >
-            <Link href="/menu" className="bg-secondary-500 hover:bg-secondary-600 text-white font-semibold text-lg px-8 py-4 rounded-lg transition-all duration-300 hover:shadow-xl transform hover:-translate-y-1 w-full sm:w-auto text-center">
-              Order Now
-            </Link>
-            <Link href="/menu" className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-primary-800 font-semibold text-lg px-8 py-4 rounded-lg transition-all duration-300 hover:shadow-xl transform hover:-translate-y-1 w-full sm:w-auto text-center">
-              View Menu
-            </Link>
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Link
+                href="/menu"
+                className="relative overflow-hidden bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 hover:from-orange-600 hover:via-red-600 hover:to-pink-600 text-white font-bold text-xl px-10 py-5 rounded-xl transition-all duration-300 hover:shadow-2xl transform hover:-translate-y-2 w-full sm:w-auto text-center group"
+              >
+                <span className="relative z-10 flex items-center justify-center gap-2">
+                  <Flame className="w-5 h-5" />
+                  ORDER NOW
+                  <Flame className="w-5 h-5" />
+                </span>
+                <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
+              </Link>
+            </motion.div>
+            
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Link
+                href="/menu"
+                className="relative overflow-hidden bg-transparent border-2 border-yellow-400 text-white hover:bg-gradient-to-r hover:from-yellow-400/20 hover:via-orange-400/20 hover:to-yellow-400/20 font-bold text-xl px-10 py-5 rounded-xl transition-all duration-300 hover:shadow-2xl transform hover:-translate-y-2 w-full sm:w-auto text-center group"
+                style={{
+                  borderImage: 'linear-gradient(45deg, #facc15, #f97316, #facc15) 1',
+                }}
+              >
+                <span className="relative z-10 flex items-center justify-center gap-2">
+                  <Star className="w-5 h-5" />
+                  VIEW MENU
+                  <Star className="w-5 h-5" />
+                </span>
+              </Link>
+            </motion.div>
+          </motion.div>
+
+          {/* Floating promotional badges */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8, delay: 0.6 }}
+            className="flex justify-center gap-4 mt-8 flex-wrap"
+          >
+            <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg flex items-center gap-2">
+              <Award className="w-4 h-4" />
+              100% Halal
+            </div>
+            <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg flex items-center gap-2">
+              <Zap className="w-4 h-4" />
+              Fast Service
+            </div>
+            <div className="bg-gradient-to-r from-yellow-500 to-orange-600 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg flex items-center gap-2">
+              <Star className="w-4 h-4" />
+              Premium Quality
+            </div>
           </motion.div>
         </div>
-        
+
         {/* Scroll Indicator */}
         <motion.div
           animate={{ y: [0, 10, 0] }}
           transition={{ duration: 2, repeat: Infinity }}
           className="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-white"
         >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-          </svg>
+          <ChevronDown className="w-6 h-6" />
         </motion.div>
       </section>
 
       {/* Featured Items Section */}
-      <section className="py-16 lg:py-24 bg-primary-50">
+      <section className="py-16 lg:py-24 bg-gradient-to-br from-primary-50 via-yellow-50 to-orange-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 50 }}
@@ -103,12 +218,32 @@ export default function Home() {
             viewport={{ once: true }}
             className="text-center mb-12"
           >
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-display font-bold text-primary-800 mb-6">
-              Featured Dishes
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.8 }}
+              viewport={{ once: true }}
+              className="inline-block mb-4"
+            >
+              <span className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-6 py-2 rounded-full text-sm font-bold uppercase tracking-wide shadow-lg flex items-center gap-2">
+                <Flame className="w-4 h-4" />
+                Most Popular
+                <Flame className="w-4 h-4" />
+              </span>
+            </motion.div>
+            
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-display font-bold mb-6">
+              <span className="bg-gradient-to-r from-orange-600 via-red-600 to-pink-600 bg-clip-text text-transparent">
+                Featured 
+              </span>
+              <span className="text-primary-800"> Dishes</span>
             </h2>
+            
             <p className="text-lg sm:text-xl text-primary-600 max-w-3xl mx-auto leading-relaxed">
-              Discover our most popular and signature items, crafted with the finest ingredients 
-              and authentic Nigerian flavors.
+              <span className="font-semibold bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent">
+                Discover our most popular and signature items
+              </span>
+              <span>, crafted with the finest ingredients and authentic Nigerian flavors that will make your taste buds dance!</span>
             </p>
           </motion.div>
 
@@ -140,7 +275,10 @@ export default function Home() {
                     preparationTime={item.preparation_time}
                     calories={item.calories}
                     isFeature={true}
-                    onAddToCart={handleAddToCart}
+                    hasCustomizations={
+                      item.customization_options && item.customization_options.length > 0
+                    }
+                    onCardClick={handleCardClick}
                   />
                 </motion.div>
               ))}
@@ -149,79 +287,107 @@ export default function Home() {
         </div>
       </section>
 
-      {/* About Section */}
-      <section className="section-padding bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <motion.div
-              initial={{ opacity: 0, x: -50 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8 }}
-              viewport={{ once: true }}
-            >
-              <h2 className="text-4xl md:text-5xl font-display font-bold text-neutral-800 mb-6">
-                Where Tradition Meets Innovation
-              </h2>
-              <p className="text-lg text-neutral-600 mb-6">
-                At ExpreeZmeal, we blend the rich culinary heritage of Nigeria with modern 
-                fast-casual dining. Our chefs use time-honored recipes and premium ingredients 
-                to create dishes that honor tradition while embracing contemporary tastes.
-              </p>
-              <p className="text-lg text-neutral-600 mb-8">
-                From our signature shawarma wraps to our refreshing zobo beverages, every item 
-                on our menu tells a story of Nigerian culture and hospitality.
-              </p>
-              <Link href="/about" className="btn-primary">
-                Learn More About Us
-              </Link>
-            </motion.div>
-            
-            <motion.div
-              initial={{ opacity: 0, x: 50 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8 }}
-              viewport={{ once: true }}
-              className="relative"
-            >
-              <div className="aspect-square bg-gradient-to-br from-secondary-100 to-accent-100 rounded-2xl flex items-center justify-center">
-                <svg className="w-32 h-32 text-secondary-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-              </div>
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
       {/* CTA Section */}
-      <section className="section-padding bg-secondary-600 text-white">
-        <div className="container-custom text-center">
+      <section className="pt-16 pb-10 bg-gradient-to-br from-red-600 via-orange-600 to-yellow-600 text-white relative overflow-hidden">
+        {/* Animated background elements */}
+        <div className="absolute inset-0">
+          <div className="absolute top-10 left-10 w-20 h-20 bg-yellow-400/20 rounded-full animate-pulse"></div>
+          <div className="absolute bottom-10 right-10 w-32 h-32 bg-orange-400/20 rounded-full animate-bounce"></div>
+          <div className="absolute top-1/2 left-1/4 w-16 h-16 bg-red-400/20 rounded-full animate-ping"></div>
+        </div>
+        
+        <div className="container-custom text-center relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 50 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
             viewport={{ once: true }}
           >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+              viewport={{ once: true }}
+              className="mb-6"
+            >
+              <div className="flex justify-center items-center gap-4">
+                <Star className="w-12 h-12 text-yellow-300 animate-bounce" />
+                <Award className="w-12 h-12 text-orange-300 animate-pulse" />
+                <Star className="w-12 h-12 text-yellow-300 animate-bounce" />
+              </div>
+            </motion.div>
+            
             <h2 className="text-4xl md:text-5xl font-display font-bold mb-6">
-              Ready to Experience Nigerian Luxury?
+              <span className="bg-gradient-to-r from-yellow-200 via-white to-yellow-200 bg-clip-text text-transparent">
+                Ready to Experience 
+              </span>
+              <br />
+              <span className="bg-gradient-to-r from-green-300 via-emerald-400 to-green-300 bg-clip-text text-transparent">
+                Nigerian Luxury?
+              </span>
             </h2>
-            <p className="text-xl mb-8 text-secondary-100 max-w-2xl mx-auto">
-              Join thousands of satisfied customers who have made ExpreeZmeal their go-to 
-              destination for authentic Nigerian cuisine.
+            
+            <p className="text-xl mb-8 max-w-2xl mx-auto">
+              <span className="bg-gradient-to-r from-yellow-200 to-orange-200 bg-clip-text text-transparent font-semibold">
+                Join thousands of satisfied customers
+              </span>
+              <span className="text-white/95"> who have made ExpreeZmeal their go-to destination for </span>
+              <span className="bg-gradient-to-r from-green-300 to-emerald-400 bg-clip-text text-transparent font-bold">
+                authentic Nigerian cuisine
+              </span>
+              <span className="text-white/95">!</span>
             </p>
+            
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/menu" className="btn-secondary text-lg px-8 py-4">
-                Order for Delivery
-              </Link>
-              <Link href="/contact" className="border-2 border-white text-white hover:bg-white hover:text-secondary-600 font-semibold py-3 px-8 rounded-lg transition-all duration-300 text-lg">
-                Find Locations
-              </Link>
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Link 
+                  href="/menu" 
+                  className="bg-gradient-to-r from-green-500 via-emerald-600 to-green-500 hover:from-green-600 hover:via-emerald-700 hover:to-green-600 text-white font-bold text-xl px-10 py-4 rounded-xl transition-all duration-300 hover:shadow-2xl transform hover:-translate-y-1 inline-flex items-center gap-2"
+                >
+                  <Rocket className="w-5 h-5" />
+                  ORDER PICKUP NOW
+                  <Rocket className="w-5 h-5" />
+                </Link>
+              </motion.div>
             </div>
+            
+            {/* Additional trust indicators */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.4 }}
+              viewport={{ once: true }}
+              className="mt-8 flex justify-center gap-8 flex-wrap text-sm"
+            >
+              <div className="flex items-center gap-2">
+                <Star className="w-5 h-5 text-yellow-300" />
+                <span className="font-semibold">5-Star Rated</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Clock className="w-5 h-5 text-blue-300" />
+                <span className="font-semibold">Quick Pickup</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <DollarSign className="w-5 h-5 text-green-300" />
+                <span className="font-semibold">Great Prices</span>
+              </div>
+            </motion.div>
           </motion.div>
         </div>
       </section>
 
       <Footer />
+
+      {/* Product Modal */}
+      <ProductModal
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        menuItem={selectedItem}
+        onAddToCart={handleModalAddToCart}
+      />
     </div>
   )
 }

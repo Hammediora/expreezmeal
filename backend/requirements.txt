@@ -18,6 +18,7 @@ redis
 pytest
 pytest-flask
 pytest-cov
+stripe
 waitress
 psycopg2-binary
 

@@ -14,6 +14,23 @@ export interface Category {
   display_order: number
 }
 
+export interface OptionChoice {
+  id: string
+  name: string
+  price_modifier: number
+  is_default: boolean
+  display_order: number
+}
+
+export interface CustomizationOption {
+  id: string
+  name: string
+  type: 'SINGLE_SELECT' | 'MULTI_SELECT'
+  is_required: boolean
+  display_order: number
+  choices: OptionChoice[]
+}
+
 export interface MenuItem {
   id: string
   category_id: string
@@ -28,9 +45,18 @@ export interface MenuItem {
   calories?: number
   allergens?: string[]
   dietary_flags?: string[]
+  customization_options?: CustomizationOption[]
 }
 
 // Cart Types
+export interface CartItemCustomization {
+  customization_option_id: string
+  option_choice_id: string
+  option_name: string
+  choice_name: string
+  price_modifier: number
+}
+
 export interface CartItem {
   id: string
   menu_item_id: string
@@ -39,6 +65,8 @@ export interface CartItem {
   quantity: number
   special_instructions?: string
   image_url?: string
+  customizations?: CartItemCustomization[]
+  total_customization_cost?: number
 }
 
 export interface Cart {
@@ -97,7 +125,7 @@ export interface Address {
   postal_code: string
   country: string
   is_default: boolean
-  address_type: 'BILLING' | 'DELIVERY'
+  address_type: 'BILLING' | 'DELIVERY' | 'PICKUP'
 }
 
 // Form Types
@@ -135,7 +163,7 @@ export const API_ENDPOINTS = {
 export const APP_CONFIG = {
   API_BASE_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000',
   APP_NAME: 'ExpreeZmeal',
-  CURRENCY: '₦',
-  TAX_RATE: 0.075, // 7.5% VAT in Nigeria
+  CURRENCY: '$',
+  TAX_RATE: 0.0875, // 8.75% sales tax (typical for Chicago)
   DEFAULT_TIP_PERCENTAGE: 15,
 } as const

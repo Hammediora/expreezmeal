@@ -7,6 +7,7 @@ from flask_migrate import Migrate
 from flask_session import Session
 from flask_cors import CORS
 import redis
+import stripe
 from functools import wraps
 from datetime import datetime
 
@@ -21,6 +22,13 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL:
     raise ValueError("DATABASE_URL is not set. Check your environment variables.")
 
+# Configure Stripe
+stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
+STRIPE_PUBLISHABLE_KEY = os.getenv("STRIPE_PUBLISHABLE_KEY")
+
+if not stripe.api_key or not STRIPE_PUBLISHABLE_KEY:
+    raise ValueError("Stripe keys are not set. Check your environment variables.")
+
 # Configure Flask App for SQLAlchemy
 app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -32,7 +40,9 @@ db.init_app(app)
 migrate = Migrate(app, db)
 
 # Import models after db is initialized
-from database import User, Address, Category, MenuItem, Order, OrderItem, Payment, DeliveryServiceOrder
+from database import (User, Address, Category, MenuItem, Order, OrderItem,
+                     Payment, DeliveryServiceOrder, CustomizationOption,
+                     OptionChoice, OrderItemCustomization)
 
 # Flask session & Redis setup
 token = secrets.token_hex(64)
@@ -162,7 +172,7 @@ def shopping_cart_address():
 def shopping_cart_new_address():
     return render_template('shopping-cart-new-address.html')
 
-# ============= API ROUTES FOR FRONTEND ============= 
+# ============= API ROUTES FOR FRONTEND =============
 
 @app.route('/api/health')
 def health_check():
@@ -193,24 +203,38 @@ def get_menu_items():
     try:
         category_id = request.args.get('category_id')
         query = MenuItem.query.filter_by(is_available=True)
-        
+
         if category_id:
             query = query.filter_by(category_id=category_id)
-            
+
         menu_items = query.all()
         return jsonify([{
             'id': item.id,
             'category_id': item.category_id,
             'name': item.name,
             'description': item.description,
-            'price': float(item.price),
-            'sale_price': float(item.sale_price) if item.sale_price else None,
+            'price': float(item.price) / 100,  # Convert cents to dollars
+            'sale_price': float(item.sale_price) / 100 if item.sale_price else None,  # Convert cents to dollars
             'image_url': item.image_url,
             'is_featured': item.is_featured,
             'preparation_time': item.preparation_time,
             'calories': item.calories,
             'allergens': item.allergens,
-            'dietary_flags': item.dietary_flags
+            'dietary_flags': item.dietary_flags,
+            'customization_options': [{
+                'id': opt.id,
+                'name': opt.name,
+                'type': opt.type,
+                'is_required': opt.is_required,
+                'display_order': opt.display_order,
+                'choices': [{
+                    'id': choice.id,
+                    'name': choice.name,
+                    'price_modifier': float(choice.price_modifier) / 100,  # Convert cents to dollars
+                    'is_default': choice.is_default,
+                    'display_order': choice.display_order
+                } for choice in sorted(opt.option_choices, key=lambda x: x.display_order)]
+            } for opt in sorted(item.customization_options, key=lambda x: x.display_order)]
         } for item in menu_items])
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -225,11 +249,29 @@ def get_featured_items():
             'category_id': item.category_id,
             'name': item.name,
             'description': item.description,
-            'price': float(item.price),
-            'sale_price': float(item.sale_price) if item.sale_price else None,
+            'price': float(item.price) / 100,  # Convert cents to dollars
+            'sale_price': float(item.sale_price) / 100 if item.sale_price else None,  # Convert cents to dollars
             'image_url': item.image_url,
+            'is_available': item.is_available,
+            'is_featured': item.is_featured,
             'preparation_time': item.preparation_time,
-            'calories': item.calories
+            'calories': item.calories,
+            'allergens': item.allergens,
+            'dietary_flags': item.dietary_flags,
+            'customization_options': [{
+                'id': option.id,
+                'name': option.name,
+                'type': option.type,
+                'is_required': option.is_required,
+                'display_order': option.display_order,
+                'choices': [{
+                    'id': choice.id,
+                    'name': choice.name,
+                    'price_modifier': float(choice.price_modifier) / 100,  # Convert cents to dollars
+                    'is_default': choice.is_default,
+                    'display_order': choice.display_order
+                } for choice in option.option_choices]
+            } for option in item.customization_options] if item.customization_options else []
         } for item in featured_items])
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -252,55 +294,23 @@ def get_menu_item(item_id):
             'preparation_time': item.preparation_time,
             'calories': item.calories,
             'allergens': item.allergens,
-            'dietary_flags': item.dietary_flags
+            'dietary_flags': item.dietary_flags,
+            'customization_options': [{
+                'id': opt.id,
+                'name': opt.name,
+                'type': opt.type,
+                'is_required': opt.is_required,
+                'display_order': opt.display_order,
+                'choices': [{
+                    'id': choice.id,
+                    'name': choice.name,
+                    'price_modifier': float(choice.price_modifier),
+                    'is_default': choice.is_default,
+                    'display_order': choice.display_order
+                } for choice in sorted(opt.option_choices, key=lambda x: x.display_order)]
+            } for opt in sorted(item.customization_options, key=lambda x: x.display_order)]
         })
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/api/orders', methods=['POST'])
-def create_order():
-    """Create a new order"""
-    try:
-        data = request.get_json()
-        
-        # Create new order
-        order = Order(
-            user_id=data.get('user_id'),
-            delivery_address_id=data.get('delivery_address_id'),
-            order_type=data.get('order_type', 'DELIVERY'),
-            subtotal=data.get('subtotal'),
-            tax=data.get('tax'),
-            tip=data.get('tip', 0),
-            total=data.get('total'),
-            special_instructions=data.get('special_instructions')
-        )
-        
-        db.session.add(order)
-        db.session.flush()  # Get the order ID
-        
-        # Add order items
-        for item_data in data.get('items', []):
-            order_item = OrderItem(
-                order_id=order.id,
-                menu_item_id=item_data['menu_item_id'],
-                quantity=item_data['quantity'],
-                unit_price=item_data['unit_price'],
-                total_price=item_data['total_price'],
-                special_instructions=item_data.get('special_instructions')
-            )
-            db.session.add(order_item)
-        
-        db.session.commit()
-        
-        return jsonify({
-            'id': order.id,
-            'status': order.status,
-            'total': float(order.total),
-            'created_at': order.created_at.isoformat()
-        }), 201
-        
-    except Exception as e:
-        db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/orders/<order_id>')
@@ -325,9 +335,231 @@ def get_order(order_id):
                 'quantity': item.quantity,
                 'unit_price': float(item.unit_price),
                 'total_price': float(item.total_price),
-                'special_instructions': item.special_instructions
+                'special_instructions': item.special_instructions,
+                'customizations': [{
+                    'customization_option_id': custom.customization_option_id,
+                    'option_choice_id': custom.option_choice_id,
+                    'price_modifier': float(custom.price_modifier),
+                    'option_name': custom.customization_option.name,
+                    'choice_name': custom.option_choice.name
+                } for custom in item.customizations]
             } for item in order.order_items]
         })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# Stripe Payment Endpoints
+@app.route('/api/stripe/config', methods=['GET'])
+def get_stripe_config():
+    """Get Stripe publishable key for frontend"""
+    return jsonify({
+        'publishable_key': STRIPE_PUBLISHABLE_KEY
+    })
+
+
+@app.route('/api/stripe/create-payment-intent', methods=['POST'])
+def create_payment_intent():
+    """Create a Stripe PaymentIntent for checkout"""
+    try:
+        data = request.get_json()
+
+        # Validate required fields
+        required_fields = ['amount', 'currency']
+        for field in required_fields:
+            if field not in data:
+                return jsonify({'error': f'Missing required field: {field}'}), 400
+
+        amount = int(data['amount'])  # Amount in cents
+        currency = data.get('currency', 'usd')
+
+        # Create PaymentIntent with automatic payment methods
+        intent = stripe.PaymentIntent.create(
+            amount=amount,
+            currency=currency,
+            automatic_payment_methods={
+                'enabled': True,
+            },
+            metadata={
+                'order_id': data.get('order_id', ''),
+                'customer_email': data.get('customer_email', ''),
+            }
+        )
+
+        return jsonify({
+            'client_secret': intent.client_secret,
+            'payment_intent_id': intent.id
+        })
+
+    except stripe.error.StripeError as e:
+        return jsonify({'error': str(e)}), 400
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/orders/create', methods=['POST'])
+def create_order():
+    """Create a new order with payment processing"""
+    try:
+        data = request.get_json()
+
+        # Validate required fields
+        required_fields = ['items', 'delivery_address', 'payment_method']
+        for field in required_fields:
+            if field not in data:
+                return jsonify({'error': f'Missing required field: {field}'}), 400
+
+        # Calculate order totals
+        subtotal = 0
+        order_items_data = []
+
+        for item_data in data['items']:
+            # Get menu item
+            menu_item = MenuItem.query.get(item_data['menu_item_id'])
+            if not menu_item:
+                return jsonify({'error': f'Menu item not found: {item_data["menu_item_id"]}'}), 404
+
+            quantity = item_data.get('quantity', 1)
+            unit_price = menu_item.price  # Price in cents
+
+            # Calculate customization costs
+            customization_cost = 0
+            customizations_data = []
+
+            if 'customizations' in item_data:
+                for custom in item_data['customizations']:
+                    option_choice = OptionChoice.query.get(custom['option_choice_id'])
+                    if option_choice:
+                        customization_cost += option_choice.price_modifier
+                        customizations_data.append({
+                            'customization_option_id': custom['customization_option_id'],
+                            'option_choice_id': custom['option_choice_id'],
+                            'price_modifier': option_choice.price_modifier
+                        })
+
+            total_unit_price = unit_price + customization_cost
+            total_price = total_unit_price * quantity
+            subtotal += total_price
+
+            order_items_data.append({
+                'menu_item_id': item_data['menu_item_id'],
+                'quantity': quantity,
+                'unit_price': total_unit_price,
+                'total_price': total_price,
+                'special_instructions': item_data.get('special_instructions', ''),
+                'customizations': customizations_data
+            })
+
+        # Calculate tax and total
+        tax_rate = 0.08875  # 8.875% tax rate (adjust as needed)
+        tax_amount = int(subtotal * tax_rate)
+        tip_amount = data.get('tip_amount', 0)
+        total_amount = subtotal + tax_amount + tip_amount
+
+        # Create order
+        new_order = Order(
+            customer_name=data['delivery_address'].get('name', 'Guest'),
+            customer_email=data['delivery_address'].get('email', ''),
+            customer_phone=data['delivery_address'].get('phone', ''),
+            delivery_address=f"{data['delivery_address']['address_line1']}, {data['delivery_address']['city']}, {data['delivery_address']['state']} {data['delivery_address']['postal_code']}",
+            subtotal=subtotal,
+            tax_amount=tax_amount,
+            tip_amount=tip_amount,
+            total_amount=total_amount,
+            status='PENDING',
+            special_instructions=data.get('special_instructions', '')
+        )
+
+        db.session.add(new_order)
+        db.session.flush()  # Get the order ID
+
+        # Create order items
+        for item_data in order_items_data:
+            order_item = OrderItem(
+                order_id=new_order.id,
+                menu_item_id=item_data['menu_item_id'],
+                quantity=item_data['quantity'],
+                unit_price=item_data['unit_price'],
+                total_price=item_data['total_price'],
+                special_instructions=item_data['special_instructions']
+            )
+            db.session.add(order_item)
+            db.session.flush()
+
+            # Create customizations
+            for custom_data in item_data['customizations']:
+                customization = OrderItemCustomization(
+                    order_item_id=order_item.id,
+                    customization_option_id=custom_data['customization_option_id'],
+                    option_choice_id=custom_data['option_choice_id'],
+                    price_modifier=custom_data['price_modifier']
+                )
+                db.session.add(customization)
+
+        # Create payment record
+        payment = Payment(
+            order_id=new_order.id,
+            amount=total_amount,
+            payment_method=data['payment_method'],
+            payment_status='PENDING'
+        )
+        db.session.add(payment)
+
+        db.session.commit()
+
+        return jsonify({
+            'order_id': new_order.id,
+            'total_amount': total_amount,
+            'subtotal': subtotal,
+            'tax_amount': tax_amount,
+            'tip_amount': tip_amount,
+            'status': 'PENDING'
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/orders/<order_id>/confirm-payment', methods=['POST'])
+def confirm_payment(order_id):
+    """Confirm payment for an order"""
+    try:
+        data = request.get_json()
+        payment_intent_id = data.get('payment_intent_id')
+
+        if not payment_intent_id:
+            return jsonify({'error': 'Missing payment_intent_id'}), 400
+
+        # Verify payment with Stripe
+        intent = stripe.PaymentIntent.retrieve(payment_intent_id)
+
+        if intent.status != 'succeeded':
+            return jsonify({'error': 'Payment not successful'}), 400
+
+        # Update order and payment status
+        order = Order.query.get(order_id)
+        if not order:
+            return jsonify({'error': 'Order not found'}), 404
+
+        payment = Payment.query.filter_by(order_id=order_id).first()
+        if payment:
+            payment.payment_status = 'COMPLETED'
+            payment.transaction_id = payment_intent_id
+
+        order.status = 'CONFIRMED'
+        order.updated_at = datetime.utcnow()
+
+        db.session.commit()
+
+        return jsonify({
+            'order_id': order_id,
+            'status': 'CONFIRMED',
+            'payment_status': 'COMPLETED'
+        })
+
+    except stripe.error.StripeError as e:
+        return jsonify({'error': str(e)}), 400
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

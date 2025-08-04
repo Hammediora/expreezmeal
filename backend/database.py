@@ -9,7 +9,7 @@ def generate_uuid():
 
 class User(db.Model):
     __tablename__ = 'users'
-    
+
     id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
     full_name = db.Column(db.String(255), nullable=False)
     email = db.Column(db.String(255), unique=True, nullable=False)
@@ -18,7 +18,7 @@ class User(db.Model):
     is_superuser = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     last_login = db.Column(db.DateTime)
-    
+
     # Relationships
     addresses = db.relationship('Address', backref='user', lazy=True)
     orders = db.relationship('Order', backref='user', lazy=True)
@@ -26,7 +26,7 @@ class User(db.Model):
 
 class Address(db.Model):
     __tablename__ = 'addresses'
-    
+
     id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
     user_id = db.Column(db.String(36), db.ForeignKey('users.id', ondelete='CASCADE'))
     address_line1 = db.Column(db.String(255), nullable=False)
@@ -41,20 +41,20 @@ class Address(db.Model):
 
 class Category(db.Model):
     __tablename__ = 'categories'
-    
+
     id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
     name = db.Column(db.String(100), unique=True, nullable=False)
     description = db.Column(db.Text)
     image_url = db.Column(db.String(255))
     is_active = db.Column(db.Boolean, default=True)
     display_order = db.Column(db.Integer)
-    
+
     # Relationships
     menu_items = db.relationship('MenuItem', backref='category', lazy=True)
 
 class MenuItem(db.Model):
     __tablename__ = 'menu_items'
-    
+
     id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
     category_id = db.Column(db.String(36), db.ForeignKey('categories.id'))
     name = db.Column(db.String(255), nullable=False)
@@ -72,11 +72,36 @@ class MenuItem(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     # Relationships
-    # customization_options = db.relationship('CustomizationOption', backref='menu_item', lazy=True)  # Model not defined
+    customization_options = db.relationship('CustomizationOption', backref='menu_item', lazy=True)
+
+class CustomizationOption(db.Model):
+    __tablename__ = 'customization_options'
+
+    id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
+    menu_item_id = db.Column(db.String(36), db.ForeignKey('menu_items.id', ondelete='CASCADE'))
+    name = db.Column(db.String(255), nullable=False)  # e.g., "Protein", "Add-ons", "Sweetness"
+    type = db.Column(db.String(50), nullable=False)  # 'SINGLE_SELECT', 'MULTI_SELECT'
+    is_required = db.Column(db.Boolean, default=False)
+    display_order = db.Column(db.Integer, default=0)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # Relationships
+    option_choices = db.relationship('OptionChoice', backref='customization_option', lazy=True, cascade='all, delete-orphan')
+
+class OptionChoice(db.Model):
+    __tablename__ = 'option_choices'
+
+    id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
+    customization_option_id = db.Column(db.String(36), db.ForeignKey('customization_options.id', ondelete='CASCADE'))
+    name = db.Column(db.String(255), nullable=False)  # e.g., "Chicken", "Beef", "Extra Sauce"
+    price_modifier = db.Column(db.Numeric(10, 2), default=0.00)  # Additional cost
+    is_default = db.Column(db.Boolean, default=False)
+    display_order = db.Column(db.Integer, default=0)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class Order(db.Model):
     __tablename__ = 'orders'
-    
+
     id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
     user_id = db.Column(db.String(36), db.ForeignKey('users.id'))
     delivery_address_id = db.Column(db.String(36), db.ForeignKey('addresses.id'))
@@ -101,7 +126,7 @@ class Order(db.Model):
 
 class OrderItem(db.Model):
     __tablename__ = 'order_items'
-    
+
     id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
     order_id = db.Column(db.String(36), db.ForeignKey('orders.id'))
     menu_item_id = db.Column(db.String(36), db.ForeignKey('menu_items.id'))
@@ -111,12 +136,22 @@ class OrderItem(db.Model):
     special_instructions = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    # Relationships  
-    # customizations = db.relationship('OrderItemCustomization', backref='order_item', lazy=True)  # Model not defined
+    # Relationships
+    customizations = db.relationship('OrderItemCustomization', backref='order_item', lazy=True, cascade='all, delete-orphan')
+
+class OrderItemCustomization(db.Model):
+    __tablename__ = 'order_item_customizations'
+
+    id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
+    order_item_id = db.Column(db.String(36), db.ForeignKey('order_items.id', ondelete='CASCADE'))
+    customization_option_id = db.Column(db.String(36), db.ForeignKey('customization_options.id'))
+    option_choice_id = db.Column(db.String(36), db.ForeignKey('option_choices.id'))
+    price_modifier = db.Column(db.Numeric(10, 2), default=0.00)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class Payment(db.Model):
     __tablename__ = 'payments'
-    
+
     id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
     order_id = db.Column(db.String(36), db.ForeignKey('orders.id'))
     amount = db.Column(db.Numeric(10, 2), nullable=False)
@@ -128,7 +163,7 @@ class Payment(db.Model):
 
 class DeliveryServiceOrder(db.Model):
     __tablename__ = 'delivery_service_orders'
-    
+
     id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
     order_id = db.Column(db.String(36), db.ForeignKey('orders.id'))
     service_name = db.Column(db.String(50), nullable=False)  # 'DOORDASH', 'UBER_EATS'

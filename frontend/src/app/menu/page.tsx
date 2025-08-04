@@ -5,9 +5,11 @@ import { motion } from 'framer-motion'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import MenuCard from '@/components/MenuCard'
+import ProductModal from '@/components/ProductModal'
 import { apiClient, handleApiError } from '@/lib/api'
-import { MenuItem, Category } from '@/types'
+import { MenuItem, Category, CartItemCustomization } from '@/types'
 import { useCart } from '@/context/CartContext'
+import { ApiError } from 'next/dist/server/api-utils'
 
 export default function MenuPage() {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([])
@@ -15,6 +17,8 @@ export default function MenuPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
   const { addItem } = useCart()
 
   useEffect(() => {
@@ -22,12 +26,12 @@ export default function MenuPage() {
       try {
         const [items, cats] = await Promise.all([
           apiClient.getMenuItems(),
-          apiClient.getCategories()
+          apiClient.getCategories(),
         ])
         setMenuItems(items)
         setCategories(cats)
       } catch (err) {
-        setError(handleApiError(err))
+        setError(handleApiError(err as ApiError))
       } finally {
         setLoading(false)
       }
@@ -36,15 +40,31 @@ export default function MenuPage() {
     fetchData()
   }, [])
 
-  const filteredItems = selectedCategory === 'all' 
-    ? menuItems 
-    : menuItems.filter(item => item.category_id === selectedCategory)
+  const filteredItems =
+    selectedCategory === 'all'
+      ? menuItems
+      : menuItems.filter(item => item.category_id === selectedCategory)
 
-  const handleAddToCart = (itemId: string) => {
+  const handleCardClick = (itemId: string) => {
     const item = filteredItems.find(item => item.id === itemId)
     if (item) {
-      addItem(item)
+      setSelectedItem(item)
+      setIsModalOpen(true)
     }
+  }
+
+  const handleModalAddToCart = (
+    item: MenuItem,
+    quantity: number,
+    customizations?: CartItemCustomization[],
+    specialInstructions?: string
+  ) => {
+    addItem(item, quantity, customizations, specialInstructions)
+  }
+
+  const closeModal = () => {
+    setIsModalOpen(false)
+    setSelectedItem(null)
   }
 
   const handleCategoryChange = async (categoryId: string) => {
@@ -55,7 +75,7 @@ export default function MenuPage() {
         const items = await apiClient.getMenuItems(categoryId)
         setMenuItems(items)
       } catch (err) {
-        setError(handleApiError(err))
+        setError(handleApiError(err as ApiError))
       } finally {
         setLoading(false)
       }
@@ -65,7 +85,7 @@ export default function MenuPage() {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      
+
       {/* Hero Section */}
       <section className="relative h-96 flex items-center justify-center hero-bg">
         <div className="absolute inset-0 bg-black bg-opacity-50" />
@@ -78,7 +98,7 @@ export default function MenuPage() {
           >
             Our Menu
           </motion.h1>
-          
+
           <motion.p
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
@@ -91,7 +111,7 @@ export default function MenuPage() {
       </section>
 
       {/* Menu Content */}
-      <section className="section-padding">
+      <section className="section-padding pb-16">
         <div className="container-custom">
           {/* Category Filter */}
           <motion.div
@@ -111,7 +131,7 @@ export default function MenuPage() {
               >
                 All Items
               </button>
-              {categories.map((category) => (
+              {categories.map(category => (
                 <button
                   key={category.id}
                   onClick={() => handleCategoryChange(category.id)}
@@ -135,10 +155,7 @@ export default function MenuPage() {
           ) : error ? (
             <div className="text-center py-20">
               <p className="text-red-600 text-lg">{error}</p>
-              <button 
-                onClick={() => window.location.reload()}
-                className="btn-primary mt-4"
-              >
+              <button onClick={() => window.location.reload()} className="btn-primary mt-4">
                 Try Again
               </button>
             </div>
@@ -146,11 +163,23 @@ export default function MenuPage() {
             <>
               {filteredItems.length === 0 ? (
                 <div className="text-center py-20">
-                  <svg className="w-16 h-16 text-neutral-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 011-1h1a2 2 0 011 1v1M9 7V6a2 2 0 011-1h1a2 2 0 011 1v1" />
+                  <svg
+                    className="w-16 h-16 text-neutral-400 mx-auto mb-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 011-1h1a2 2 0 011 1v1M9 7V6a2 2 0 011-1h1a2 2 0 011 1v1"
+                    />
                   </svg>
                   <h3 className="text-xl font-semibold text-neutral-600 mb-2">No items found</h3>
-                  <p className="text-neutral-500">Try selecting a different category or check back later.</p>
+                  <p className="text-neutral-500">
+                    Try selecting a different category or check back later.
+                  </p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -171,7 +200,10 @@ export default function MenuPage() {
                         preparationTime={item.preparation_time}
                         calories={item.calories}
                         isFeature={item.is_featured}
-                        onAddToCart={handleAddToCart}
+                        hasCustomizations={
+                          item.customization_options && item.customization_options.length > 0
+                        }
+                        onCardClick={handleCardClick}
                       />
                     </motion.div>
                   ))}
@@ -183,7 +215,7 @@ export default function MenuPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="section-padding bg-neutral-50">
+      <section className="pt-20 pb-16 bg-neutral-50">
         <div className="container-custom text-center">
           <motion.div
             initial={{ opacity: 0, y: 50 }}
@@ -192,25 +224,29 @@ export default function MenuPage() {
             viewport={{ once: true }}
           >
             <h2 className="text-3xl md:text-4xl font-display font-bold text-neutral-800 mb-4">
-              Can't Decide?
+              Can&apos;t Decide?
             </h2>
             <p className="text-lg text-neutral-600 mb-8 max-w-2xl mx-auto">
-              Try our chef's recommendations or create your own combo. 
-              Our team is here to help you find the perfect meal.
+              Try our chef&apos;s recommendations or create your own combo. Our team is here to help
+              you find the perfect meal.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button className="btn-primary">
-                Chef's Recommendations
-              </button>
-              <button className="btn-secondary">
-                Contact Us for Help
-              </button>
+              <button className="btn-primary">Chef&apos;s Recommendations</button>
+              <button className="btn-secondary">Contact Us for Help</button>
             </div>
           </motion.div>
         </div>
       </section>
 
       <Footer />
+
+      {/* Product Modal */}
+      <ProductModal
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        menuItem={selectedItem}
+        onAddToCart={handleModalAddToCart}
+      />
     </div>
   )
 }

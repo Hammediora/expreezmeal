@@ -8,12 +8,13 @@ import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import { apiClient, handleApiError, formatCurrency } from '@/lib/api'
 import { Order } from '@/types'
+import { ApiError } from 'next/dist/server/api-utils'
 
 export default function OrderConfirmationPage() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const orderId = searchParams.get('orderId')
-  
+
   const [order, setOrder] = useState<Order | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -29,7 +30,7 @@ export default function OrderConfirmationPage() {
         const orderData = await apiClient.getOrder(orderId)
         setOrder(orderData)
       } catch (err) {
-        setError(handleApiError(err))
+        setError(handleApiError(err as ApiError))
       } finally {
         setLoading(false)
       }
@@ -71,11 +72,11 @@ export default function OrderConfirmationPage() {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      
+
       <section className="section-padding">
         <div className="container-custom">
           <div className="max-w-2xl mx-auto text-center">
-            
+
             {/* Success Icon */}
             <motion.div
               initial={{ scale: 0 }}
@@ -98,7 +99,7 @@ export default function OrderConfirmationPage() {
                 Order Confirmed!
               </h1>
               <p className="text-xl text-neutral-600 mb-8">
-                Thank you for your order! We're preparing your delicious Nigerian cuisine.
+                Thank you for your order! We&apos;re preparing your delicious Nigerian cuisine.
               </p>
             </motion.div>
 
@@ -205,13 +206,13 @@ export default function OrderConfirmationPage() {
               className="space-y-4"
             >
               <h3 className="text-xl font-display font-bold text-neutral-800 mb-4">
-                What's Next?
+                What&apos;s Next?
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
                 <div className="p-4 bg-neutral-50 rounded-lg">
                   <h4 className="font-semibold text-neutral-800 mb-2">📧 Order Confirmation</h4>
                   <p className="text-sm text-neutral-600">
-                    We've sent a confirmation email with your order details.
+                    We&apos;ve sent a confirmation email with your order details.
                   </p>
                 </div>
                 <div className="p-4 bg-neutral-50 rounded-lg">
@@ -223,7 +224,7 @@ export default function OrderConfirmationPage() {
                 <div className="p-4 bg-neutral-50 rounded-lg">
                   <h4 className="font-semibold text-neutral-800 mb-2">🚗 Delivery</h4>
                   <p className="text-sm text-neutral-600">
-                    We'll notify you when your order is out for delivery.
+                    We&apos;ll notify you when your order is out for delivery.
                   </p>
                 </div>
                 <div className="p-4 bg-neutral-50 rounded-lg">

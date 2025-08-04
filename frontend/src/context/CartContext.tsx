@@ -1,7 +1,7 @@
 'use client'
 
 import React, { createContext, useContext, useReducer, useEffect } from 'react'
-import { CartItem, MenuItem } from '@/types'
+import { CartItem, MenuItem, CartItemCustomization, APP_CONFIG } from '@/types'
 
 interface CartState {
   items: CartItem[]
@@ -9,7 +9,14 @@ interface CartState {
 }
 
 type CartAction =
-  | { type: 'ADD_ITEM'; payload: MenuItem & { quantity?: number } }
+  | {
+      type: 'ADD_ITEM'
+      payload: MenuItem & {
+        quantity?: number
+        special_instructions?: string
+        customizations?: CartItemCustomization[]
+      }
+    }
   | { type: 'UPDATE_QUANTITY'; payload: { id: string; quantity: number } }
   | { type: 'REMOVE_ITEM'; payload: { id: string } }
   | { type: 'CLEAR_CART' }
@@ -18,7 +25,12 @@ type CartAction =
   | { type: 'LOAD_CART'; payload: CartItem[] }
 
 interface CartContextType extends CartState {
-  addItem: (item: MenuItem, quantity?: number) => void
+  addItem: (
+    item: MenuItem,
+    quantity?: number,
+    customizations?: CartItemCustomization[],
+    specialInstructions?: string
+  ) => void
   updateQuantity: (id: string, quantity: number) => void
   removeItem: (id: string) => void
   clearCart: () => void
@@ -35,15 +47,27 @@ const CartContext = createContext<CartContextType | undefined>(undefined)
 const cartReducer = (state: CartState, action: CartAction): CartState => {
   switch (action.type) {
     case 'ADD_ITEM': {
-      const existingItemIndex = state.items.findIndex(item => item.menu_item_id === action.payload.id)
+      const existingItemIndex = state.items.findIndex(
+        item =>
+          item.menu_item_id === action.payload.id &&
+          item.special_instructions === action.payload.special_instructions &&
+          JSON.stringify(item.customizations || []) ===
+            JSON.stringify(action.payload.customizations || [])
+      )
       const quantity = action.payload.quantity || 1
-      
+
       if (existingItemIndex >= 0) {
         // Update existing item quantity
         const newItems = [...state.items]
         newItems[existingItemIndex].quantity += quantity
         return { ...state, items: newItems }
       } else {
+        // Calculate total customization cost
+        const customizationCost = (action.payload.customizations || []).reduce(
+          (total, customization) => total + customization.price_modifier,
+          0
+        )
+
         // Add new item
         const newItem: CartItem = {
           id: `cart_${Date.now()}_${Math.random()}`,
@@ -52,39 +76,40 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
           price: action.payload.sale_price || action.payload.price,
           quantity,
           image_url: action.payload.image_url,
+          special_instructions: action.payload.special_instructions,
+          customizations: action.payload.customizations || [],
+          total_customization_cost: customizationCost,
         }
         return { ...state, items: [...state.items, newItem] }
       }
     }
-    
+
     case 'UPDATE_QUANTITY': {
       if (action.payload.quantity <= 0) {
         return { ...state, items: state.items.filter(item => item.id !== action.payload.id) }
       }
-      
+
       const newItems = state.items.map(item =>
-        item.id === action.payload.id
-          ? { ...item, quantity: action.payload.quantity }
-          : item
+        item.id === action.payload.id ? { ...item, quantity: action.payload.quantity } : item
       )
       return { ...state, items: newItems }
     }
-    
+
     case 'REMOVE_ITEM':
       return { ...state, items: state.items.filter(item => item.id !== action.payload.id) }
-    
+
     case 'CLEAR_CART':
       return { ...state, items: [] }
-    
+
     case 'TOGGLE_CART':
       return { ...state, isOpen: !state.isOpen }
-    
+
     case 'SET_CART_OPEN':
       return { ...state, isOpen: action.payload }
-    
+
     case 'LOAD_CART':
       return { ...state, items: action.payload }
-    
+
     default:
       return state
   }
@@ -120,8 +145,21 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [state.items])
 
-  const addItem = (item: MenuItem, quantity = 1) => {
-    dispatch({ type: 'ADD_ITEM', payload: { ...item, quantity } })
+  const addItem = (
+    item: MenuItem,
+    quantity = 1,
+    customizations?: CartItemCustomization[],
+    specialInstructions?: string
+  ) => {
+    dispatch({
+      type: 'ADD_ITEM',
+      payload: {
+        ...item,
+        quantity,
+        special_instructions: specialInstructions,
+        customizations: customizations,
+      },
+    })
   }
 
   const updateQuantity = (id: string, quantity: number) => {
@@ -149,11 +187,14 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }
 
   const getSubtotal = () => {
-    return state.items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+    return state.items.reduce((sum, item) => {
+      const itemTotal = (item.price + (item.total_customization_cost || 0)) * item.quantity
+      return sum + itemTotal
+    }, 0)
   }
 
   const getTax = () => {
-    return getSubtotal() * 0.075 // 7.5% VAT
+    return getSubtotal() * APP_CONFIG.TAX_RATE // US sales tax
   }
 
   const getTotal = () => {
@@ -174,11 +215,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     getTotal,
   }
 
-  return (
-    <CartContext.Provider value={contextValue}>
-      {children}
-    </CartContext.Provider>
-  )
+  return <CartContext.Provider value={contextValue}>{children}</CartContext.Provider>
 }
 
 export const useCart = () => {
