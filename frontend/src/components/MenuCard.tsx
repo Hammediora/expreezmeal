@@ -40,7 +40,7 @@ const MenuCard = ({
       whileTap={{ scale: 0.98 }}
       transition={{ duration: 0.3 }}
       onClick={() => onCardClick?.(id)}
-      className={`card group relative overflow-hidden cursor-pointer bg-white rounded-xl shadow-md hover:shadow-2xl transition-all duration-300 ${
+      className={`card group relative overflow-hidden cursor-pointer bg-white rounded-xl shadow-md hover:shadow-2xl transition-all duration-300 flex flex-col h-full ${
         isFeature ? 'ring-2 ring-emerald-500 shadow-lg shadow-emerald-500/20' : ''
       }`}
     >
@@ -101,7 +101,7 @@ const MenuCard = ({
       </div>
 
       {/* Content Section */}
-      <div className="p-5 sm:p-6">
+      <div className="p-5 sm:p-6 flex-1 flex flex-col">
         <div className="flex justify-between items-start mb-3">
           <h3 className="text-lg sm:text-xl font-display font-bold text-neutral-900 line-clamp-1 group-hover:text-emerald-600 transition-colors duration-300">
             {name}
@@ -119,7 +119,7 @@ const MenuCard = ({
           </div>
         </div>
 
-        <p className="text-neutral-700 text-sm sm:text-base mb-4 line-clamp-2 leading-relaxed">
+        <p className="text-neutral-700 text-sm sm:text-base mb-4 line-clamp-3 leading-relaxed flex-1">
           {description}
         </p>
 
@@ -133,19 +133,7 @@ const MenuCard = ({
           )}
           {calories && (
             <div className="flex items-center bg-red-50 px-3 py-1 rounded-full border border-red-100">
-              <svg
-                className="w-4 h-4 mr-1 text-red-500"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"
-                />
-              </svg>
+              <Flame className="w-4 h-4 mr-1 text-red-500" />
               <span className="font-medium">{calories} cal</span>
             </div>
           )}

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
+import { Check } from 'lucide-react'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import { apiClient, handleApiError, formatCurrency } from '@/lib/api'
@@ -84,9 +85,7 @@ export default function OrderConfirmationPage() {
               transition={{ duration: 0.5 }}
               className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-8"
             >
-              <svg className="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
+              <Check className="w-10 h-10 text-green-600" />
             </motion.div>
 
             {/* Header */}
