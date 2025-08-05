@@ -2,10 +2,11 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { MapPin, Phone, Mail, Clock, Map } from 'lucide-react'
+import { MapPin, Phone, Mail, Clock, Map, Calendar, Users, DollarSign } from 'lucide-react'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import { ContactFormData } from '@/types'
+import { contactApi } from '@/lib/api'
 
 export default function ContactPage() {
   const [formData, setFormData] = useState<ContactFormData>({
@@ -14,32 +15,97 @@ export default function ContactPage() {
     phone: '',
     subject: '',
     message: '',
+    inquiry_type: 'general',
+    event_date: '',
+    guest_count: undefined,
+    budget_range: '',
+    special_requirements: '',
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitMessage, setSubmitMessage] = useState<string | null>(null)
+  const [showCateringFields, setShowCateringFields] = useState(false)
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name]: value,
-    }))
+
+    // Handle special logic for catering fields
+    if (name === 'subject' && value === 'catering') {
+      setShowCateringFields(true)
+      setFormData(prev => ({
+        ...prev,
+        [name]: value,
+        inquiry_type: 'catering',
+      }))
+    } else if (name === 'subject' && value !== 'catering') {
+      setShowCateringFields(false)
+      setFormData(prev => ({
+        ...prev,
+        [name]: value,
+        inquiry_type: value,
+        event_date: '',
+        guest_count: undefined,
+        budget_range: '',
+        special_requirements: '',
+      }))
+    } else if (name === 'guest_count') {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value ? parseInt(value) : undefined,
+      }))
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value,
+      }))
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
+    setSubmitMessage(null)
 
     try {
-      // TODO: Implement actual form submission to backend
-      await new Promise(resolve => setTimeout(resolve, 2000)) // Simulate API call
-      setSubmitMessage("Thank you for your message! We'll get back to you soon.")
-      setFormData({ name: '', email: '', phone: '', subject: '', message: '' })
-    } catch (error) {
+      // Prepare data for submission
+      const submissionData: ContactFormData = {
+        ...formData,
+        // Only include catering fields if it's a catering inquiry
+        ...(formData.inquiry_type === 'catering'
+          ? {
+              event_date: formData.event_date || undefined,
+              guest_count: formData.guest_count || undefined,
+              budget_range: formData.budget_range || undefined,
+              special_requirements: formData.special_requirements || undefined,
+            }
+          : {}),
+      }
+
+      const response = await contactApi.submitContactForm(submissionData)
+
       setSubmitMessage(
-        `Sorry, there was an error sending your message: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again.`
+        `Thank you for your message! We've received your inquiry (ID: ${response.inquiry_id.slice(0, 8)}) and will get back to you soon.`
+      )
+
+      // Reset form
+      setFormData({
+        name: '',
+        email: '',
+        phone: '',
+        subject: '',
+        message: '',
+        inquiry_type: 'general',
+        event_date: '',
+        guest_count: undefined,
+        budget_range: '',
+        special_requirements: '',
+      })
+      setShowCateringFields(false)
+    } catch (error) {
+      console.error('Contact form submission error:', error)
+      setSubmitMessage(
+        `Sorry, there was an error sending your message. Please try again or contact us directly.`
       )
     } finally {
       setIsSubmitting(false)
@@ -75,8 +141,8 @@ export default function ContactPage() {
       </section>
 
       {/* Contact Content */}
-      <section className="section-padding">
-        <div className="container-custom">
+      <section className="py-12 sm:py-16 lg:py-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
             {/* Contact Information */}
             <motion.div
@@ -147,7 +213,7 @@ export default function ContactPage() {
               initial={{ opacity: 0, x: 50 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8 }}
-              className="card p-8"
+              className="bg-white p-6 sm:p-8 rounded-2xl shadow-xl border border-neutral-100"
             >
               <h2 className="text-3xl font-display font-bold text-neutral-800 mb-6">
                 Send us a Message
@@ -268,6 +334,108 @@ export default function ContactPage() {
                     placeholder="Tell us how we can help you..."
                   />
                 </div>
+
+                {/* Catering Fields - Only show when catering is selected */}
+                {showCateringFields && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="space-y-6 p-6 bg-gradient-to-r from-secondary-50 to-accent-50 rounded-lg border border-secondary-200"
+                  >
+                    <h3 className="text-lg font-semibold text-secondary-700 mb-4 flex items-center">
+                      <Users className="w-5 h-5 mr-2" />
+                      Catering Event Details
+                    </h3>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <label
+                          htmlFor="event_date"
+                          className="block text-sm font-medium text-neutral-700 mb-2"
+                        >
+                          <Calendar className="w-4 h-4 inline mr-1" />
+                          Event Date
+                        </label>
+                        <input
+                          type="date"
+                          id="event_date"
+                          name="event_date"
+                          value={formData.event_date}
+                          onChange={handleInputChange}
+                          min={new Date().toISOString().split('T')[0]}
+                          className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-secondary-500 focus:border-secondary-500 transition-colors"
+                        />
+                      </div>
+
+                      <div>
+                        <label
+                          htmlFor="guest_count"
+                          className="block text-sm font-medium text-neutral-700 mb-2"
+                        >
+                          <Users className="w-4 h-4 inline mr-1" />
+                          Number of Guests
+                        </label>
+                        <input
+                          type="number"
+                          id="guest_count"
+                          name="guest_count"
+                          value={formData.guest_count || ''}
+                          onChange={handleInputChange}
+                          min="1"
+                          max="1000"
+                          className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-secondary-500 focus:border-secondary-500 transition-colors"
+                          placeholder="e.g., 50"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label
+                        htmlFor="budget_range"
+                        className="block text-sm font-medium text-neutral-700 mb-2"
+                      >
+                        <DollarSign className="w-4 h-4 inline mr-1" />
+                        Budget Range
+                      </label>
+                      <select
+                        id="budget_range"
+                        name="budget_range"
+                        value={formData.budget_range}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-secondary-500 focus:border-secondary-500 transition-colors"
+                      >
+                        <option value="">Select budget range</option>
+                        <option value="under-50k">Under ₦50,000</option>
+                        <option value="50k-100k">₦50,000 - ₦100,000</option>
+                        <option value="100k-250k">₦100,000 - ₦250,000</option>
+                        <option value="250k-500k">₦250,000 - ₦500,000</option>
+                        <option value="500k-1m">₦500,000 - ₦1,000,000</option>
+                        <option value="above-1m">Above ₦1,000,000</option>
+                        <option value="flexible">Flexible / Discuss</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label
+                        htmlFor="special_requirements"
+                        className="block text-sm font-medium text-neutral-700 mb-2"
+                      >
+                        Special Requirements or Dietary Restrictions
+                      </label>
+                      <textarea
+                        id="special_requirements"
+                        name="special_requirements"
+                        value={formData.special_requirements}
+                        onChange={handleInputChange}
+                        rows={3}
+                        className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-secondary-500 focus:border-secondary-500 transition-colors resize-vertical"
+                        placeholder="Any dietary restrictions, theme preferences, specific menu requests, etc."
+                      />
+                    </div>
+                  </motion.div>
+                )}
 
                 <button
                   type="submit"

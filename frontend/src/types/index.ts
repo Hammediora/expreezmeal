@@ -135,6 +135,30 @@ export interface ContactFormData {
   phone?: string
   subject: string
   message: string
+  inquiry_type?: string
+  event_date?: string
+  guest_count?: number
+  budget_range?: string
+  special_requirements?: string
+}
+
+export interface ContactInquiry {
+  id: string
+  name: string
+  email: string
+  phone?: string
+  subject: string
+  message: string
+  inquiry_type: string
+  event_date?: string
+  guest_count?: number
+  budget_range?: string
+  special_requirements?: string
+  status: 'new' | 'in_progress' | 'resolved' | 'closed'
+  is_read: boolean
+  created_at: string
+  updated_at: string
+  admin_notes?: string
 }
 
 export interface CheckoutFormData {

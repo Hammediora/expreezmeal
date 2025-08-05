@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block header_title %}{{ email_title }}{% endblock %}
+{% block header_subtitle %}{{ header_subtitle }}{% endblock %}
+
+{% block header_section %}
+{% endblock %}
+
+{% block main_content %}
+<div class="admin-container">
+    <h2 class="admin-title">
+        📩 New Contact Inquiry Received
+    </h2>
+
+    <!-- Inquiry Details -->
+    <div class="inquiry-details">
+        <h3 class="section-title">
+            Inquiry Details
+        </h3>
+
+        <table class="summary-table">
+            <tr>
+                <td class="label">ID:</td>
+                <td class="value">{{ inquiry_id }}</td>
+            </tr>
+            <tr>
+                <td class="label">Type:</td>
+                <td class="value">
+                    <span class="inquiry-badge">
+                        {{ inquiry_type }}
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="label">Subject:</td>
+                <td class="value font-bold">{{ subject }}</td>
+            </tr>
+            <tr>
+                <td class="label">Date:</td>
+                <td class="value">{{ created_at }}</td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- Customer Information -->
+    <div class="customer-info">
+        <h3 class="customer-title">
+            👤 Customer Information
+        </h3>
+
+        <table class="customer-table">
+            <tr>
+                <td class="label">Name:</td>
+                <td class="value font-bold">{{ customer_name }}</td>
+            </tr>
+            <tr>
+                <td class="label">Email:</td>
+                <td class="value">
+                    <a href="mailto:{{ customer_email }}">{{ customer_email }}</a>
+                </td>
+            </tr>
+            {% if customer_phone and customer_phone != 'N/A' %}
+            <tr>
+                <td class="label">Phone:</td>
+                <td class="value">
+                    <a href="tel:{{ customer_phone }}">{{ customer_phone }}</a>
+                </td>
+            </tr>
+            {% endif %}
+        </table>
+    </div>
+
+    <!-- Message Content -->
+    <div class="message-admin">
+        <h3 class="message-admin-title">
+            💬 Message
+        </h3>
+        <div class="message-admin-content">{{ message }}</div>
+    </div>
+
+    <!-- Catering Information (if applicable) -->
+    {% if inquiry_type == 'catering' %}
+    <div class="catering-details">
+        <h3 class="catering-title">
+            🍽️ Catering Details
+        </h3>
+
+        <table class="catering-table">
+            {% if event_date and event_date != 'N/A' %}
+            <tr>
+                <td class="label">Event Date:</td>
+                <td class="value font-bold">{{ event_date }}</td>
+            </tr>
+            {% endif %}
+            {% if guest_count and guest_count != 'N/A' %}
+            <tr>
+                <td class="label">Guest Count:</td>
+                <td class="value">{{ guest_count }} guests</td>
+            </tr>
+            {% endif %}
+            {% if budget_range and budget_range != 'N/A' %}
+            <tr>
+                <td class="label">Budget Range:</td>
+                <td class="value">{{ budget_range }}</td>
+            </tr>
+            {% endif %}
+        </table>
+
+        {% if special_requirements and special_requirements != 'N/A' %}
+        <div class="special-requirements">
+            <p class="label">Special Requirements:</p>
+            <div class="content">{{ special_requirements }}</div>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Action Buttons -->
+    <div class="action-buttons">
+        <a href="mailto:{{ customer_email }}?subject=Re: {{ subject }}" class="reply-button">
+            📧 Reply to Customer
+        </a>
+        <a href="tel:{{ customer_phone }}" class="call-button">
+            📞 Call Customer
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block footer_content %}
+<p class="admin-footer">
+    This inquiry was submitted through the ExpreeZmeal contact form.
+    <br>
+    Please respond promptly to maintain excellent customer service.
+</p>
+{% endblock %}

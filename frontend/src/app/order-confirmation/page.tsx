@@ -1,5 +1,6 @@
 'use client'
 
+import { Suspense } from 'react'
 import { useEffect, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
@@ -11,7 +12,7 @@ import { apiClient, handleApiError, formatCurrency } from '@/lib/api'
 import { Order } from '@/types'
 import { ApiError } from 'next/dist/server/api-utils'
 
-export default function OrderConfirmationPage() {
+function OrderConfirmationContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const orderId = searchParams.get('orderId')
@@ -253,5 +254,19 @@ export default function OrderConfirmationPage() {
 
       <Footer />
     </div>
+  )
+}
+
+export default function OrderConfirmationPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-elegant-cream flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-secondary-600"></div>
+        </div>
+      }
+    >
+      <OrderConfirmationContent />
+    </Suspense>
   )
 }

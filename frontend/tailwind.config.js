@@ -4,6 +4,7 @@ module.exports = {
     './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
     './src/app/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/styles/**/*.{js,ts,jsx,tsx,mdx,css}',
   ],
   theme: {
     extend: {
@@ -11,7 +12,7 @@ module.exports = {
         // Elegant gold-green palette - sophisticated and inviting
         primary: {
           50: '#f7f9f7',
-          100: '#eef2ee', 
+          100: '#eef2ee',
           200: '#d5e3d7',
           300: '#b3ccb7',
           400: '#9ab0a6', // Light sage green
@@ -64,18 +65,21 @@ module.exports = {
           forest: '#384b42',
           mist: '#9ab0a6',
           shadow: '#2a453a',
-        }
+        },
       },
       fontFamily: {
-        'display': ['Playfair Display', 'serif'],
-        'body': ['Inter', 'sans-serif'],
+        display: ['Playfair Display', 'serif'],
+        body: ['Inter', 'sans-serif'],
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
         'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
-        'hero-pattern': "linear-gradient(135deg, rgba(56,75,66,0.9) 0%, rgba(106,155,134,0.7) 100%)",
-        'elegant-gradient': "linear-gradient(135deg, rgba(56,75,66,0.95) 0%, rgba(212,175,55,0.1) 100%)",
-        'gold-shimmer': "linear-gradient(90deg, rgba(212,175,55,0.1) 0%, rgba(212,175,55,0.3) 50%, rgba(212,175,55,0.1) 100%)",
+        'hero-pattern':
+          'linear-gradient(135deg, rgba(56,75,66,0.9) 0%, rgba(106,155,134,0.7) 100%)',
+        'elegant-gradient':
+          'linear-gradient(135deg, rgba(56,75,66,0.95) 0%, rgba(212,175,55,0.1) 100%)',
+        'gold-shimmer':
+          'linear-gradient(90deg, rgba(212,175,55,0.1) 0%, rgba(212,175,55,0.3) 50%, rgba(212,175,55,0.1) 100%)',
       },
       animation: {
         'fade-in': 'fadeIn 0.5s ease-in-out',
@@ -90,8 +94,8 @@ module.exports = {
         slideUp: {
           '0%': { transform: 'translateY(20px)', opacity: '0' },
           '100%': { transform: 'translateY(0)', opacity: '1' },
-        }
-      }
+        },
+      },
     },
   },
   plugins: [],

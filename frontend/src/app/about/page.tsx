@@ -111,16 +111,10 @@ export default function About() {
               </p>
 
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-3 sm:pt-4">
-                <Link
-                  href="/menu"
-                  className="bg-secondary-600 hover:bg-secondary-700 text-white font-semibold px-6 sm:px-8 py-3 sm:py-4 rounded-lg transition-all duration-300 hover:shadow-xl transform hover:-translate-y-1 text-center text-sm sm:text-base"
-                >
+                <Link href="/menu" className="btn btn-secondary text-center">
                   View Our Menu
                 </Link>
-                <Link
-                  href="/contact"
-                  className="bg-transparent border-2 border-secondary-600 text-secondary-600 hover:bg-secondary-600 hover:text-white font-semibold px-6 sm:px-8 py-3 sm:py-4 rounded-lg transition-all duration-300 text-center text-sm sm:text-base"
-                >
+                <Link href="/contact" className="btn btn-outline text-center">
                   Contact Us
                 </Link>
               </div>
@@ -409,7 +403,7 @@ export default function About() {
               className="bg-white p-6 rounded-2xl shadow-lg"
             >
               <div className="w-12 h-12 bg-secondary-100 rounded-full flex items-center justify-center mb-4 mx-auto">
-                <Users className="w-6 h-6 text-secondary-600" />
+                <Users className="w-6 h-6 text-secondary-600 text-teal-900" />
               </div>
               <h3 className="text-lg font-semibold text-neutral-800 mb-2">Customer Stories</h3>
               <p className="text-neutral-600">

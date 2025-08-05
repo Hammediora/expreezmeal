@@ -40,14 +40,14 @@ const MenuCard = ({
       whileTap={{ scale: 0.98 }}
       transition={{ duration: 0.3 }}
       onClick={() => onCardClick?.(id)}
-      className={`card group relative overflow-hidden cursor-pointer bg-white rounded-xl shadow-md hover:shadow-2xl transition-all duration-300 flex flex-col h-full ${
-        isFeature ? 'ring-2 ring-emerald-500 shadow-lg shadow-emerald-500/20' : ''
-      }`}
+      className={`menu-card-elegant group relative overflow-hidden cursor-pointer rounded-xl transition-all duration-300 flex flex-col h-full ${
+        isFeature ? 'border-[#d4af37] shadow-lg shadow-[#d4af37]/20' : 'hover:border-[#d4af37]/50'
+      } hover:shadow-2xl`}
     >
       {/* Featured Badge */}
       {isFeature && (
         <div className="absolute top-4 left-4 z-10">
-          <span className="bg-emerald-500 text-white text-xs font-semibold px-3 py-1 rounded-full shadow-md animate-pulse flex items-center gap-1">
+          <span className="bg-[#004526] text-white text-xs font-semibold px-3 py-1 rounded-full shadow-md animate-pulse flex items-center gap-1">
             <Sparkles size={12} />
             Featured
           </span>
@@ -57,16 +57,13 @@ const MenuCard = ({
       {/* Customizable Badge */}
       {hasCustomizations && (
         <div className="absolute top-4 right-4 z-10">
-          <span className="bg-blue-500 text-white text-xs font-semibold px-3 py-1 rounded-full shadow-md">
-            Customizable
-          </span>
         </div>
       )}
 
       {/* Discount Badge */}
       {hasDiscount && (
         <div className="absolute top-4 left-4 z-10">
-          <span className="bg-red-500 text-white text-xs font-semibold px-3 py-1 rounded-full shadow-md">
+          <span className="bg-[#d4af37] text-white text-xs font-semibold px-3 py-1 rounded-full shadow-md">
             SALE
           </span>
         </div>
@@ -103,7 +100,7 @@ const MenuCard = ({
       {/* Content Section */}
       <div className="p-5 sm:p-6 flex-1 flex flex-col">
         <div className="flex justify-between items-start mb-3">
-          <h3 className="text-lg sm:text-xl font-display font-bold text-neutral-900 line-clamp-1 group-hover:text-emerald-600 transition-colors duration-300">
+          <h3 className="text-lg sm:text-xl font-display font-bold text-neutral-900 line-clamp-1 group-hover:text-[#004526] transition-colors duration-300">
             {name}
           </h3>
           <div className="flex flex-col items-end">
@@ -112,11 +109,11 @@ const MenuCard = ({
                 ${(price / 100).toFixed(2)}
               </span>
             )}
-            <span className="text-xl sm:text-2xl font-bold text-emerald-600">
+            <span className="text-xl sm:text-2xl font-bold text-[#004526]">
               ${(displayPrice / 100).toFixed(2)}
             </span>
             {hasCustomizations && (
-              <span className="text-xs text-blue-600 font-medium">from this price</span>
+              <span className="text-xs text-[#6a9b86] font-medium">from this price</span>
             )}
           </div>
         </div>
@@ -142,16 +139,16 @@ const MenuCard = ({
         </div>
 
         {/* Interactive Bottom Section */}
-        <div className="flex items-center justify-between pt-3 border-t border-neutral-100">
+        <div className="flex items-center justify-between pt-3 border-t border-[rgba(106,155,134,0.2)]">
           <div className="flex items-center space-x-2 text-sm text-neutral-600">
             {hasCustomizations ? (
               <>
-                <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                <div className="w-2 h-2 bg-[#6a9b86] rounded-full animate-pulse"></div>
                 <span className="font-medium">Customizable Options</span>
               </>
             ) : (
               <>
-                <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+                <div className="w-2 h-2 bg-[#004526] rounded-full"></div>
                 <span className="font-medium">Ready to Order</span>
               </>
             )}
@@ -160,7 +157,7 @@ const MenuCard = ({
           <motion.div
             whileHover={{ scale: 1.1, rotate: 90 }}
             whileTap={{ scale: 0.9 }}
-            className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center group-hover:from-emerald-600 group-hover:to-emerald-700 transition-all duration-300 shadow-md"
+            className="w-10 h-10 bg-gradient-to-r from-[#004526] to-[#6a9b86] rounded-full flex items-center justify-center group-hover:from-[#004526] group-hover:to-[#004526] transition-all duration-300 shadow-md"
           >
             <Plus size={20} className="text-white" strokeWidth={2.5} />
           </motion.div>
@@ -169,7 +166,7 @@ const MenuCard = ({
 
       {/* Hover glow effect */}
       <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-        <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-emerald-500/10 to-blue-500/10"></div>
+        <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-[#004526]/10 to-[#d4af37]/10"></div>
       </div>
     </motion.div>
   )

@@ -27,6 +27,7 @@ const SessionManager: React.FC<SessionManagerProps> = ({ className = '' }) => {
     try {
       setSessionsLoading(true)
       console.log('Debug: Starting to load sessions for user:', user.email)
+
       const response = await adminAuth.getSessions()
       setSessions(response.sessions)
       console.log('Debug: Successfully loaded sessions:', response.sessions.length)

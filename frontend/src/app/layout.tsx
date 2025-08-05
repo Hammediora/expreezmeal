@@ -44,6 +44,7 @@ export default function RootLayout({
       </head>
       <body
         className={`${inter.variable} ${playfair.variable} antialiased font-body text-foreground bg-background`}
+        suppressHydrationWarning={true}
       >
         <CartProvider>{children}</CartProvider>
       </body>

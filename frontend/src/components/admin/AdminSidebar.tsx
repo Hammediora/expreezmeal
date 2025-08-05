@@ -16,6 +16,7 @@ import {
   BarChart3,
   Clock,
   Shield,
+  MessageSquare,
 } from 'lucide-react'
 import { useAdminAuth } from '@/context/AdminAuthContext'
 
@@ -43,6 +44,12 @@ const sidebarItems = [
     href: '/admin/reports',
     icon: BarChart3,
     requiredRole: 'manager' as const,
+  },
+  {
+    name: 'Contact Inquiries',
+    href: '/admin/contact',
+    icon: MessageSquare,
+    requiredRole: 'staff' as const,
   },
   {
     name: 'Receipts',

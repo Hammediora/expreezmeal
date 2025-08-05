@@ -186,5 +186,85 @@ class EmailService:
             print(f"❌ Failed to send new menu item notifications: {str(e)}")
             return False
 
+    def send_contact_inquiry_notification(self, inquiry_data: Dict, admin_email: str) -> bool:
+        """Send contact inquiry notification to admin"""
+        try:
+            # Prepare template context
+            context = {
+                'email_title': 'New Contact Inquiry',
+                'header_subtitle': 'New Contact Inquiry Received',
+                'inquiry_id': inquiry_data.get('id', 'N/A'),
+                'customer_name': inquiry_data.get('name', 'N/A'),
+                'customer_email': inquiry_data.get('email', 'N/A'),
+                'customer_phone': inquiry_data.get('phone', 'N/A'),
+                'subject': inquiry_data.get('subject', 'N/A'),
+                'message': inquiry_data.get('message', 'N/A'),
+                'inquiry_type': inquiry_data.get('inquiry_type', 'general'),
+                'event_date': inquiry_data.get('event_date', 'N/A'),
+                'guest_count': inquiry_data.get('guest_count', 'N/A'),
+                'budget_range': inquiry_data.get('budget_range', 'N/A'),
+                'special_requirements': inquiry_data.get('special_requirements', 'N/A'),
+                'created_at': inquiry_data.get('created_at', 'N/A')
+            }
+
+            # Render email template
+            html_content = self._render_template('contact_inquiry_admin.html', **context)
+
+            if not html_content:
+                return False
+
+            # Send email
+            response = resend.Emails.send({
+                "from": self.from_email,
+                "to": admin_email,
+                "subject": f"🔔 New Contact Inquiry: {inquiry_data.get('subject', 'No Subject')}",
+                "html": html_content
+            })
+
+            print(f"✅ Contact inquiry notification sent to admin: {admin_email}")
+            print(f"📧 Email ID: {response.get('id', 'N/A')}")
+            return True
+
+        except Exception as e:
+            print(f"❌ Failed to send contact inquiry notification: {str(e)}")
+            return False
+
+    def send_contact_confirmation(self, inquiry_data: Dict, customer_email: str) -> bool:
+        """Send contact confirmation email to customer"""
+        try:
+            # Prepare template context
+            context = {
+                'email_title': 'Thank You for Contacting Us',
+                'header_subtitle': 'We Received Your Message',
+                'customer_name': inquiry_data.get('name', 'Customer'),
+                'inquiry_id': inquiry_data.get('id', 'N/A'),
+                'subject': inquiry_data.get('subject', 'N/A'),
+                'message': inquiry_data.get('message', 'N/A'),
+                'inquiry_type': inquiry_data.get('inquiry_type', 'general'),
+                'created_at': inquiry_data.get('created_at', 'N/A')
+            }
+
+            # Render email template
+            html_content = self._render_template('contact_confirmation.html', **context)
+
+            if not html_content:
+                return False
+
+            # Send email
+            response = resend.Emails.send({
+                "from": self.from_email,
+                "to": customer_email,
+                "subject": "✅ Thank You for Contacting ExpreeZmeal",
+                "html": html_content
+            })
+
+            print(f"✅ Contact confirmation sent to: {customer_email}")
+            print(f"📧 Email ID: {response.get('id', 'N/A')}")
+            return True
+
+        except Exception as e:
+            print(f"❌ Failed to send contact confirmation: {str(e)}")
+            return False
+
 # Create global email service instance
 email_service = EmailService()

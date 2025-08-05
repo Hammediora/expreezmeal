@@ -6,7 +6,7 @@ import { motion } from 'framer-motion'
 import { Plus, Search, Edit2, Trash2, Eye, EyeOff, Star, Clock, X, Save } from 'lucide-react'
 import AdminLayout from '@/components/admin/AdminLayout'
 import ProtectedRoute from '@/components/admin/ProtectedRoute'
-import { adminApiClient, formatCurrency, handleApiError } from '@/lib/api'
+import { adminApiClient, apiClient, formatCurrency, handleApiError } from '@/lib/api'
 import { MenuItem, Category } from '@/types'
 
 interface MenuItemFormData {
@@ -49,31 +49,16 @@ const AdminMenu: React.FC = () => {
   })
 
   useEffect(() => {
-    // Debug auth state
-    console.log('Debug: All cookies:', document.cookie)
-    console.log('Debug: localStorage admin_user:', localStorage.getItem('admin_user'))
-    console.log('Debug: localStorage admin_token:', localStorage.getItem('admin_token'))
-
-    // Temporary workaround: If no cookie but we have the token, set it manually
-    // Replace 'YOUR_TOKEN_HERE' with the actual token from your login response
-    const tempToken =
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNzc3ZWNjYzEtYWVkNi00OTY1LWIyNjYtMzc3YjFjYzRiMWRmIiwiZW1haWwiOiJhZG1pbkBleHByZWV6bWVhbC5jb20iLCJqdGkiOiIzZTQxNmIzMC1mN2YxLTQ4N2ItYjVmMi0wYzg0ZGVmYjkwZDUiLCJpYXQiOjE3NTQzNjQ3ODcsImV4cCI6MTc1NDQ1MTE4N30.EgJrC1PkyawNI_rvC1pRA6A0Yrys2xVJL-hQl_IEp5A'
-
-    if (!document.cookie.includes('admin_token') && tempToken) {
-      console.log('Debug: Setting temporary token in cookie')
-      const expirationDate = new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours from now
-      document.cookie = `admin_token=${tempToken}; expires=${expirationDate.toUTCString()}; path=/`
-    }
-
     fetchData()
   }, [])
 
   const fetchData = async () => {
     try {
       setLoading(true)
+      // Use public API for reading data, admin API for create/update/delete operations
       const [itemsData, categoriesData] = await Promise.all([
-        adminApiClient.getMenuItems(),
-        adminApiClient.getCategories(),
+        apiClient.getMenuItems(), // Use public API for reading
+        apiClient.getCategories(), // Use public API for reading
       ])
       setMenuItems(itemsData)
       setCategories(categoriesData)

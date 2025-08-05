@@ -44,7 +44,7 @@ migrate = Migrate(app, db)
 # Import models after db is initialized
 from database import (User, Address, Category, MenuItem, Order, OrderItem,
                      Payment, DeliveryServiceOrder, CustomizationOption,
-                     OptionChoice, OrderItemCustomization)
+                     OptionChoice, OrderItemCustomization, ContactInquiry)
 
 # Import admin routes
 from admin_routes import admin_bp
@@ -895,6 +895,162 @@ def update_order_status_api():
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+# Contact Form API Endpoints
+@app.route('/api/contact/submit', methods=['POST'])
+def submit_contact_form():
+    """Submit a contact form inquiry"""
+    try:
+        data = request.get_json()
+
+        # Validate required fields
+        required_fields = ['name', 'email', 'subject', 'message']
+        for field in required_fields:
+            if not data.get(field):
+                return jsonify({'error': f'{field} is required'}), 400
+
+        # Create new contact inquiry
+        inquiry = ContactInquiry(
+            name=data.get('name'),
+            email=data.get('email'),
+            phone=data.get('phone'),
+            subject=data.get('subject'),
+            message=data.get('message'),
+            inquiry_type=data.get('inquiry_type', 'general'),
+            event_date=datetime.strptime(data.get('event_date'), '%Y-%m-%d').date() if data.get('event_date') else None,
+            guest_count=data.get('guest_count'),
+            budget_range=data.get('budget_range'),
+            special_requirements=data.get('special_requirements')
+        )
+
+        # Save to database
+        db.session.add(inquiry)
+        db.session.commit()
+
+        # Send notification email to admin
+        admin_email_sent = email_service.send_contact_inquiry_notification(
+            inquiry_data=inquiry.to_dict(),
+            admin_email="admin@expreezmeal.com"
+        )
+
+        # Send confirmation email to customer
+        customer_email_sent = email_service.send_contact_confirmation(
+            inquiry_data=inquiry.to_dict(),
+            customer_email=inquiry.email
+        )
+
+        return jsonify({
+            'message': 'Contact form submitted successfully',
+            'inquiry_id': inquiry.id,
+            'admin_email_sent': admin_email_sent,
+            'customer_email_sent': customer_email_sent
+        }), 201
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error submitting contact form: {str(e)}")
+        return jsonify({'error': 'Failed to submit contact form'}), 500
+
+
+@app.route('/api/contact/inquiries', methods=['GET'])
+def get_contact_inquiries():
+    """Get all contact inquiries (admin only)"""
+    try:
+        # Get query parameters
+        status = request.args.get('status')
+        inquiry_type = request.args.get('inquiry_type')
+        page = int(request.args.get('page', 1))
+        per_page = int(request.args.get('per_page', 20))
+
+        # Build query
+        query = ContactInquiry.query
+
+        if status:
+            query = query.filter(ContactInquiry.status == status)
+        if inquiry_type:
+            query = query.filter(ContactInquiry.inquiry_type == inquiry_type)
+
+        # Order by creation date (newest first)
+        query = query.order_by(ContactInquiry.created_at.desc())
+
+        # Paginate
+        paginated = query.paginate(
+            page=page,
+            per_page=per_page,
+            error_out=False
+        )
+
+        inquiries = [inquiry.to_dict() for inquiry in paginated.items]
+
+        return jsonify({
+            'inquiries': inquiries,
+            'pagination': {
+                'page': page,
+                'per_page': per_page,
+                'total': paginated.total,
+                'pages': paginated.pages,
+                'has_next': paginated.has_next,
+                'has_prev': paginated.has_prev
+            }
+        }), 200
+
+    except Exception as e:
+        print(f"Error fetching contact inquiries: {str(e)}")
+        return jsonify({'error': 'Failed to fetch contact inquiries'}), 500
+
+
+@app.route('/api/contact/inquiries/<inquiry_id>', methods=['GET'])
+def get_contact_inquiry(inquiry_id):
+    """Get a specific contact inquiry (admin only)"""
+    try:
+        inquiry = ContactInquiry.query.get(inquiry_id)
+        if not inquiry:
+            return jsonify({'error': 'Inquiry not found'}), 404
+
+        # Mark as read
+        if not inquiry.is_read:
+            inquiry.is_read = True
+            db.session.commit()
+
+        return jsonify(inquiry.to_dict()), 200
+
+    except Exception as e:
+        print(f"Error fetching contact inquiry: {str(e)}")
+        return jsonify({'error': 'Failed to fetch contact inquiry'}), 500
+
+
+@app.route('/api/contact/inquiries/<inquiry_id>/update-status', methods=['POST'])
+def update_inquiry_status(inquiry_id):
+    """Update contact inquiry status (admin only)"""
+    try:
+        data = request.get_json()
+        new_status = data.get('status')
+        admin_notes = data.get('admin_notes')
+
+        if new_status not in ['new', 'in_progress', 'resolved', 'closed']:
+            return jsonify({'error': 'Invalid status'}), 400
+
+        inquiry = ContactInquiry.query.get(inquiry_id)
+        if not inquiry:
+            return jsonify({'error': 'Inquiry not found'}), 404
+
+        inquiry.status = new_status
+        if admin_notes:
+            inquiry.admin_notes = admin_notes
+        inquiry.updated_at = datetime.utcnow()
+
+        db.session.commit()
+
+        return jsonify({
+            'message': 'Inquiry status updated successfully',
+            'inquiry': inquiry.to_dict()
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error updating inquiry status: {str(e)}")
+        return jsonify({'error': 'Failed to update inquiry status'}), 500
 
 
 if __name__ == '__main__':

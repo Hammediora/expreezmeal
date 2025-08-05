@@ -138,7 +138,7 @@ const ReceiptsPage: React.FC = () => {
               </div>
 
               {/* Export Button */}
-              <button className="flex items-center space-x-2 px-4 py-2.5 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors">
+              <button className="flex items-center space-x-2 px-4 py-2.5 bg-[#5a8a73] text-white rounded-lg hover:bg-[#4a7360] transition-colors">
                 <Download className="w-5 h-5" />
                 <span>Export All</span>
               </button>
