@@ -5,6 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Swiper, SwiperSlide } from 'swiper/react'
 import { Pagination, Autoplay } from 'swiper/modules'
+import { CheckCircle, Users, Heart, Instagram, Menu } from 'lucide-react'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 
@@ -87,24 +88,24 @@ export default function About() {
               viewport={{ once: true }}
               className="space-y-4 sm:space-y-6 order-2 lg:order-1"
             >
-              <div className="inline-block px-3 sm:px-4 py-1.5 sm:py-2 bg-secondary-100 text-secondary-700 rounded-full text-xs sm:text-sm font-semibold mb-3 sm:mb-4">
+              <div className="inline-block px-3 sm:px-4 py-1.5 sm:py-2 bg-secondary-100 text-secondary-700 rounded-full text-s sm:text-sm font-semibold mb-3 sm:mb-4 text-black">
                 Our Story
               </div>
 
-              <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-bold text-neutral-800 leading-tight">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-bold text-neutral-900 leading-tight">
                 Where Tradition Meets
                 <span className="text-secondary-600 block mt-1 sm:mt-2">Innovation</span>
               </h2>
 
               <div className="w-16 sm:w-24 h-1 bg-gradient-to-r from-secondary-500 to-accent-500 rounded-full"></div>
 
-              <p className="text-base sm:text-lg text-neutral-600 leading-relaxed">
+              <p className="text-base sm:text-lg text-neutral-900 leading-relaxed">
                 At ExpreeZmeal, we blend the rich culinary heritage of Nigeria with modern
                 fast-casual dining. Our chefs use time-honored recipes and premium ingredients to
                 create dishes that honor tradition while embracing contemporary tastes.
               </p>
 
-              <p className="text-base sm:text-lg text-neutral-600 leading-relaxed">
+              <p className="text-base sm:text-lg text-neutral-900 leading-relaxed">
                 From our signature shawarma wraps to our refreshing zobo beverages, every item on
                 our menu tells a story of Nigerian culture and hospitality.
               </p>
@@ -138,7 +139,7 @@ export default function About() {
                 <div className="aspect-[4/3] lg:aspect-auto rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl sm:shadow-2xl relative bg-white p-1.5 sm:p-2">
                   <div className="w-full h-full rounded-xl sm:rounded-2xl overflow-hidden relative">
                     <Image
-                      src="/images/elegantRestaurat.jpg"
+                      src="/images/LogoIcon3.png"
                       alt="ExpreeZmeal Restaurant Interior"
                       width={700}
                       height={700}
@@ -185,13 +186,7 @@ export default function About() {
               className="bg-gradient-to-br from-white to-[#f8fafc] p-6 lg:p-8 rounded-2xl shadow-lg border border-[#d4af37]/20 hover:border-[#d4af37]/40 hover:shadow-xl transition-all duration-300 group"
             >
               <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-[#d4af37] to-[#facc15] rounded-full flex items-center justify-center mb-4 sm:mb-6 mx-auto shadow-lg group-hover:shadow-[0_0_15px_#d4af37] transition-all duration-300">
-                <svg
-                  className="w-7 h-7 sm:w-8 sm:h-8 text-white"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+                <CheckCircle className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
               </div>
               <h3 className="text-lg sm:text-xl font-display font-semibold text-neutral-800 mb-3 sm:mb-4 text-center">
                 Quality First
@@ -210,17 +205,7 @@ export default function About() {
               className="bg-gradient-to-br from-white to-[#f8fafc] p-6 lg:p-8 rounded-2xl shadow-lg border border-[#0f766e]/20 hover:border-[#0f766e]/40 hover:shadow-xl transition-all duration-300 group"
             >
               <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-[#0f766e] to-[#134e4a] rounded-full flex items-center justify-center mb-4 sm:mb-6 mx-auto shadow-lg group-hover:shadow-[0_0_15px_#0f766e] transition-all duration-300">
-                <svg
-                  className="w-7 h-7 sm:w-8 sm:h-8 text-white"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z"
-                    clipRule="evenodd"
-                  />
-                </svg>
+                <Users className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
               </div>
               <h3 className="text-lg sm:text-xl font-display font-semibold text-neutral-800 mb-3 sm:mb-4 text-center">
                 Cultural Heritage
@@ -238,17 +223,7 @@ export default function About() {
               className="bg-gradient-to-br from-white to-[#f8fafc] p-6 lg:p-8 rounded-2xl shadow-lg border border-[#facc15]/20 hover:border-[#facc15]/40 hover:shadow-xl transition-all duration-300 group"
             >
               <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-[#facc15] to-[#d4af37] rounded-full flex items-center justify-center mb-4 sm:mb-6 mx-auto shadow-lg group-hover:shadow-[0_0_15px_#facc15] transition-all duration-300">
-                <svg
-                  className="w-7 h-7 sm:w-8 sm:h-8 text-white"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"
-                    clipRule="evenodd"
-                  />
-                </svg>
+                <Heart className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
               </div>
               <h3 className="text-lg sm:text-xl font-display font-semibold text-neutral-800 mb-3 sm:mb-4 text-center">
                 Community Focus
@@ -285,9 +260,7 @@ export default function About() {
                   className="bg-gradient-to-br from-white to-[#f8fafc] p-6 rounded-2xl shadow-lg border border-[#d4af37]/20 mx-4"
                 >
                   <div className="w-16 h-16 bg-gradient-to-br from-[#d4af37] to-[#facc15] rounded-full flex items-center justify-center mb-6 mx-auto shadow-lg">
-                    <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
+                    <CheckCircle className="w-8 h-8 text-white" />
                   </div>
                   <h3 className="text-xl font-display font-semibold text-neutral-800 mb-4 text-center">
                     Quality First
@@ -308,13 +281,7 @@ export default function About() {
                   className="bg-gradient-to-br from-white to-[#f8fafc] p-6 rounded-2xl shadow-lg border border-[#0f766e]/20 mx-4"
                 >
                   <div className="w-16 h-16 bg-gradient-to-br from-[#0f766e] to-[#134e4a] rounded-full flex items-center justify-center mb-6 mx-auto shadow-lg">
-                    <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
-                      <path
-                        fillRule="evenodd"
-                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
+                    <Users className="w-8 h-8 text-white" />
                   </div>
                   <h3 className="text-xl font-display font-semibold text-neutral-800 mb-4 text-center">
                     Cultural Heritage
@@ -334,13 +301,7 @@ export default function About() {
                   className="bg-gradient-to-br from-white to-[#f8fafc] p-6 rounded-2xl shadow-lg border border-[#facc15]/20 mx-4"
                 >
                   <div className="w-16 h-16 bg-gradient-to-br from-[#facc15] to-[#d4af37] rounded-full flex items-center justify-center mb-6 mx-auto shadow-lg">
-                    <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
-                      <path
-                        fillRule="evenodd"
-                        d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
+                    <Heart className="w-8 h-8 text-white" />
                   </div>
                   <h3 className="text-xl font-display font-semibold text-neutral-800 mb-4 text-center">
                     Community Focus
@@ -397,13 +358,7 @@ export default function About() {
 
               {/* Content */}
               <div className="relative z-10 flex items-center gap-2 sm:gap-3 text-white">
-                <svg
-                  className="w-5 h-5 sm:w-6 sm:h-6 drop-shadow-md"
-                  fill="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
-                </svg>
+                <Instagram className="w-5 h-5 sm:w-6 sm:h-6 drop-shadow-md" />
                 <span className="drop-shadow-md">Follow @exprezzmeals</span>
               </div>
 
@@ -422,13 +377,7 @@ export default function About() {
               className="bg-white p-6 rounded-2xl shadow-lg"
             >
               <div className="w-12 h-12 bg-secondary-100 rounded-full flex items-center justify-center mb-4 mx-auto">
-                <svg className="w-6 h-6 text-secondary-600" fill="currentColor" viewBox="0 0 20 20">
-                  <path
-                    fillRule="evenodd"
-                    d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
-                    clipRule="evenodd"
-                  />
-                </svg>
+                <Menu className="w-6 h-6 text-secondary-600 text-emerald-800" />
               </div>
               <h3 className="text-lg font-semibold text-neutral-800 mb-2">Daily Specials</h3>
               <p className="text-neutral-600">
@@ -444,9 +393,7 @@ export default function About() {
               className="bg-white p-6 rounded-2xl shadow-lg"
             >
               <div className="w-12 h-12 bg-accent-100 rounded-full flex items-center justify-center mb-4 mx-auto">
-                <svg className="w-6 h-6 text-accent-600" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+                <CheckCircle className="w-6 h-6 text-accent-600 text-amber-200" />
               </div>
               <h3 className="text-lg font-semibold text-neutral-800 mb-2">Behind the Scenes</h3>
               <p className="text-neutral-600">
@@ -462,13 +409,7 @@ export default function About() {
               className="bg-white p-6 rounded-2xl shadow-lg"
             >
               <div className="w-12 h-12 bg-secondary-100 rounded-full flex items-center justify-center mb-4 mx-auto">
-                <svg className="w-6 h-6 text-secondary-600" fill="currentColor" viewBox="0 0 20 20">
-                  <path
-                    fillRule="evenodd"
-                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z"
-                    clipRule="evenodd"
-                  />
-                </svg>
+                <Users className="w-6 h-6 text-secondary-600" />
               </div>
               <h3 className="text-lg font-semibold text-neutral-800 mb-2">Customer Stories</h3>
               <p className="text-neutral-600">
@@ -503,17 +444,7 @@ export default function About() {
                   className="bg-white p-6 rounded-2xl shadow-lg mx-4"
                 >
                   <div className="w-12 h-12 bg-secondary-100 rounded-full flex items-center justify-center mb-4 mx-auto">
-                    <svg
-                      className="w-6 h-6 text-secondary-600"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
+                    <Menu className="w-6 h-6 text-secondary-600" />
                   </div>
                   <h3 className="text-lg font-semibold text-neutral-800 mb-2 text-center">
                     Daily Specials
@@ -534,13 +465,7 @@ export default function About() {
                   className="bg-white p-6 rounded-2xl shadow-lg mx-4"
                 >
                   <div className="w-12 h-12 bg-accent-100 rounded-full flex items-center justify-center mb-4 mx-auto">
-                    <svg
-                      className="w-6 h-6 text-accent-600"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
+                    <CheckCircle className="w-6 h-6 text-accent-600" />
                   </div>
                   <h3 className="text-lg font-semibold text-neutral-800 mb-2 text-center">
                     Behind the Scenes
@@ -560,17 +485,7 @@ export default function About() {
                   className="bg-white p-6 rounded-2xl shadow-lg mx-4"
                 >
                   <div className="w-12 h-12 bg-secondary-100 rounded-full flex items-center justify-center mb-4 mx-auto">
-                    <svg
-                      className="w-6 h-6 text-secondary-600"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
+                    <Users className="w-6 h-6 text-secondary-600" />
                   </div>
                   <h3 className="text-lg font-semibold text-neutral-800 mb-2 text-center">
                     Customer Stories
