@@ -198,24 +198,26 @@ export default function CheckoutPage() {
     <div className="min-h-screen bg-gray-50">
       <Navbar />
 
-      <section className="py-16">
+      <section className="py-8 sm:py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-4xl mx-auto">
             {/* Header */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-center mb-12"
+              className="text-center mb-8 sm:mb-12"
             >
-              <h1 className="text-4xl font-display font-bold text-neutral-800 mb-4">Checkout</h1>
-              <p className="text-lg text-neutral-600">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-display font-bold text-neutral-800 mb-2 sm:mb-4">
+                Checkout
+              </h1>
+              <p className="text-base sm:text-lg text-neutral-600 px-4">
                 Complete your order for pickup - delicious Nigerian cuisine awaits!
               </p>
             </motion.div>
 
             {/* Progress Steps */}
-            <div className="flex items-center justify-center mb-12">
-              <div className="flex items-center space-x-4">
+            <div className="flex items-center justify-center mb-8 sm:mb-12 px-4">
+              <div className="flex items-center space-x-2 sm:space-x-4">
                 {[
                   { step: 1, label: 'Customer Info' },
                   { step: 2, label: 'Payment' },
@@ -224,7 +226,7 @@ export default function CheckoutPage() {
                   <div key={step} className="flex items-center">
                     <div className="flex flex-col items-center">
                       <div
-                        className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold transition-colors ${
+                        className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-semibold transition-colors text-sm sm:text-base ${
                           currentStep >= step
                             ? 'bg-gradient-to-br from-[#d4af37] to-[#facc15] text-white shadow-lg'
                             : 'bg-neutral-200 text-neutral-500'
@@ -233,14 +235,14 @@ export default function CheckoutPage() {
                         {step}
                       </div>
                       <span
-                        className={`text-xs mt-1 ${currentStep >= step ? 'text-[#d4af37] font-medium' : 'text-neutral-500'}`}
+                        className={`text-xs mt-1 text-center max-w-[60px] sm:max-w-none ${currentStep >= step ? 'text-[#d4af37] font-medium' : 'text-neutral-500'}`}
                       >
                         {label}
                       </span>
                     </div>
                     {step < 3 && (
                       <div
-                        className={`w-16 h-1 mt-[-12px] transition-colors ${
+                        className={`w-8 sm:w-16 h-1 mt-[-12px] transition-colors ${
                           currentStep > step
                             ? 'bg-gradient-to-r from-[#d4af37] to-[#facc15]'
                             : 'bg-neutral-200'
@@ -252,7 +254,7 @@ export default function CheckoutPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-12">
               {/* Main Content */}
               <div className="lg:col-span-2">
                 {/* Error Display */}
@@ -260,7 +262,7 @@ export default function CheckoutPage() {
                   <motion.div
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg mb-6"
+                    className="bg-red-50 border border-red-200 text-red-800 px-3 sm:px-4 py-3 rounded-lg mb-4 sm:mb-6 mx-4 lg:mx-0 text-sm sm:text-base"
                   >
                     {error}
                   </motion.div>
@@ -271,17 +273,17 @@ export default function CheckoutPage() {
                   <motion.div
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8"
+                    className="bg-white rounded-xl sm:rounded-2xl shadow-lg border border-gray-100 p-4 sm:p-6 md:p-8 mx-4 lg:mx-0"
                   >
-                    <h2 className="text-2xl font-display font-bold text-neutral-800 mb-6">
+                    <h2 className="text-xl sm:text-2xl font-display font-bold text-neutral-800 mb-4 sm:mb-6">
                       Pickup Information
                     </h2>
 
-                    <div className="mb-6 p-4 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg">
+                    <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg">
                       <div className="flex items-center space-x-2">
-                        <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+                        <div className="w-4 h-4 sm:w-5 sm:h-5 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
                           <svg
-                            className="w-3 h-3 text-white"
+                            className="w-2 h-2 sm:w-3 sm:h-3 text-white"
                             fill="currentColor"
                             viewBox="0 0 20 20"
                           >
@@ -293,7 +295,9 @@ export default function CheckoutPage() {
                           </svg>
                         </div>
                         <div>
-                          <p className="text-sm font-medium text-green-800">Pickup Location</p>
+                          <p className="text-xs sm:text-sm font-medium text-green-800">
+                            Pickup Location
+                          </p>
                           <p className="text-xs text-green-600">
                             123 Main Street, New York, NY 10001
                           </p>

@@ -114,16 +114,16 @@ def send_custom_email(self, data: Dict, customer_info: Dict) -> bool:
             'customer_name': customer_info.get('name', 'Customer'),
             # Add your variables
         }
-        
+
         html_content = self._render_template('new_template.html', **context)
-        
+
         response = resend.Emails.send({
             "from": self.from_email,
             "to": customer_info.get('email'),
             "subject": "Your Subject",
             "html": html_content
         })
-        
+
         return True
     except Exception as e:
         print(f"❌ Failed to send custom email: {str(e)}")

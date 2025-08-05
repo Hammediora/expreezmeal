@@ -89,14 +89,14 @@ export default function MenuPage() {
       <Navbar />
 
       {/* Hero Section */}
-      <section className="relative h-96 flex items-center justify-center hero-bg">
+      <section className="relative h-72 sm:h-80 md:h-96 flex items-center justify-center hero-bg">
         <div className="absolute inset-0 bg-black bg-opacity-50" />
-        <div className="relative z-10 text-center text-white max-w-4xl mx-auto px-4">
+        <div className="relative z-10 text-center text-white max-w-4xl mx-auto px-4 sm:px-6">
           <motion.h1
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            className="text-4xl md:text-6xl font-display font-bold mb-4"
+            className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-bold mb-3 sm:mb-4"
           >
             Our Menu
           </motion.h1>
@@ -105,7 +105,7 @@ export default function MenuPage() {
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="text-xl md:text-2xl text-neutral-200"
+            className="text-base sm:text-lg md:text-xl lg:text-2xl text-neutral-200"
           >
             Discover authentic Nigerian flavors crafted with love and tradition
           </motion.p>
@@ -120,12 +120,12 @@ export default function MenuPage() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="mb-12"
+            className="mb-8 sm:mb-12"
           >
-            <div className="flex flex-wrap justify-center gap-4 mb-8">
+            <div className="flex flex-wrap justify-center gap-2 sm:gap-4 mb-6 sm:mb-8">
               <button
                 onClick={() => handleCategoryChange('all')}
-                className={`px-6 py-3 rounded-full font-semibold transition-all duration-300 ${
+                className={`px-4 sm:px-6 py-2 sm:py-3 rounded-full font-semibold transition-all duration-300 text-sm sm:text-base ${
                   selectedCategory === 'all'
                     ? 'bg-secondary-600 text-white shadow-lg'
                     : 'bg-white text-neutral-700 hover:bg-neutral-100 border border-neutral-200'
@@ -137,7 +137,7 @@ export default function MenuPage() {
                 <button
                   key={category.id}
                   onClick={() => handleCategoryChange(category.id)}
-                  className={`px-6 py-3 rounded-full font-semibold transition-all duration-300 ${
+                  className={`px-4 sm:px-6 py-2 sm:py-3 rounded-full font-semibold transition-all duration-300 text-sm sm:text-base ${
                     selectedCategory === category.id
                       ? 'bg-secondary-600 text-white shadow-lg'
                       : 'bg-white text-neutral-700 hover:bg-neutral-100 border border-neutral-200'
@@ -184,7 +184,7 @@ export default function MenuPage() {
                   </p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                   {filteredItems.map((item, index) => (
                     <motion.div
                       key={item.id}
@@ -217,7 +217,7 @@ export default function MenuPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="pt-20 pb-16 bg-neutral-50">
+      <section className="pt-12 sm:pt-20 pb-12 sm:pb-16 bg-neutral-50">
         <div className="container-custom text-center">
           <motion.div
             initial={{ opacity: 0, y: 50 }}
@@ -225,14 +225,14 @@ export default function MenuPage() {
             transition={{ duration: 0.8 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-3xl md:text-4xl font-display font-bold text-neutral-800 mb-4">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-display font-bold text-neutral-800 mb-3 sm:mb-4">
               Can&apos;t Decide?
             </h2>
-            <p className="text-lg text-neutral-600 mb-8 max-w-2xl mx-auto">
+            <p className="text-base sm:text-lg text-neutral-600 mb-6 sm:mb-8 max-w-2xl mx-auto px-4">
               Try our chef&apos;s recommendations or create your own combo. Our team is here to help
               you find the perfect meal.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4">
               <button className="btn-primary" onClick={() => setIsChefModalOpen(true)}>
                 Chef&apos;s Recommendations
               </button>

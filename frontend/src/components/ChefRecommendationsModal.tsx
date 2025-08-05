@@ -149,31 +149,31 @@ const ChefRecommendationsModal = ({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ duration: 0.3 }}
-            className="fixed inset-4 md:inset-8 bg-white rounded-3xl shadow-2xl z-50 flex flex-col overflow-hidden"
+            className="fixed inset-2 sm:inset-4 md:inset-8 bg-white rounded-2xl sm:rounded-3xl shadow-2xl z-50 flex flex-col overflow-hidden"
           >
             {/* Header */}
-            <div className="bg-gradient-to-r from-amber-500 to-orange-500 p-6 text-white relative">
+            <div className="bg-gradient-to-r from-amber-500 to-orange-500 p-4 sm:p-6 text-white relative">
               <button
                 onClick={onClose}
                 aria-label="Close recommendations modal"
-                className="absolute top-4 right-4 w-10 h-10 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-colors"
+                className="absolute top-3 right-3 sm:top-4 sm:right-4 w-8 h-8 sm:w-10 sm:h-10 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-colors"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
-              <div className="flex items-center gap-3 mb-2">
-                <ChefHat className="w-8 h-8" />
-                <h2 className="text-2xl md:text-3xl font-display font-bold">
+              <div className="flex items-center gap-2 sm:gap-3 mb-2">
+                <ChefHat className="w-6 h-6 sm:w-8 sm:h-8" />
+                <h2 className="text-xl sm:text-2xl md:text-3xl font-display font-bold">
                   Chef&apos;s Recommendations
                 </h2>
               </div>
-              <p className="text-white/90">
+              <p className="text-white/90 text-sm sm:text-base">
                 Handpicked combos designed to give you the perfect Nigerian flavor experience.
               </p>
             </div>
 
             {/* Content */}
-            <div className="flex-1 overflow-y-auto p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-6xl mx-auto">
+            <div className="flex-1 overflow-y-auto p-3 sm:p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 max-w-6xl mx-auto">
                 {recommendations.map((combo, index) => {
                   const isAdding = addingCombo === combo.id
                   const isAdded = addedCombos.has(combo.id)
@@ -184,18 +184,18 @@ const ChefRecommendationsModal = ({
                       initial={{ opacity: 0, y: 30 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.4, delay: index * 0.1 }}
-                      className="bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-lg border border-amber-100 overflow-hidden hover:shadow-xl transition-all duration-300"
+                      className="bg-gradient-to-br from-white to-gray-50 rounded-xl sm:rounded-2xl shadow-lg border border-amber-100 overflow-hidden hover:shadow-xl transition-all duration-300"
                     >
                       {/* Combo Header */}
-                      <div className="bg-gradient-to-r from-amber-400 to-orange-400 p-5 text-white relative">
-                        <div className="flex items-center space-x-3 mb-2">
-                          <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-                            <Star className="w-5 h-5 text-white" />
+                      <div className="bg-gradient-to-r from-amber-400 to-orange-400 p-3 sm:p-5 text-white relative">
+                        <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
+                          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white/20 rounded-full flex items-center justify-center">
+                            <Star className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                           </div>
-                          <h3 className="text-xl font-bold">{combo.name}</h3>
+                          <h3 className="text-lg sm:text-xl font-bold">{combo.name}</h3>
                         </div>
                         {combo.savings && (
-                          <div className="absolute top-4 right-4">
+                          <div className="absolute top-3 right-3 sm:top-4 sm:right-4">
                             <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full animate-pulse">
                               Save ${(combo.savings / 100).toFixed(2)}!
                             </span>

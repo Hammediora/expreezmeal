@@ -58,7 +58,7 @@ const MenuCard = ({
       {hasCustomizations && (
         <div className="absolute top-4 right-4 z-10">
           <span className="bg-blue-500 text-white text-xs font-semibold px-3 py-1 rounded-full shadow-md">
-            ⚙️ Customizable
+            Customizable
           </span>
         </div>
       )}
@@ -67,7 +67,7 @@ const MenuCard = ({
       {hasDiscount && (
         <div className="absolute top-4 left-4 z-10">
           <span className="bg-red-500 text-white text-xs font-semibold px-3 py-1 rounded-full shadow-md">
-            💥 SALE
+            SALE
           </span>
         </div>
       )}
@@ -89,7 +89,7 @@ const MenuCard = ({
             {/* Click to view text overlay */}
             <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
               <div className="bg-white/95 backdrop-blur-sm text-neutral-800 px-6 py-3 rounded-full font-semibold text-sm shadow-lg border border-white/50">
-                {hasCustomizations ? '🎨 Click to Customize' : '👆 Click to Add'}
+                {hasCustomizations ? 'Click to Customize' : 'Click to Add'}
               </div>
             </div>
           </div>

@@ -173,6 +173,50 @@ export const API_ENDPOINTS = {
   ORDERS: '/api/orders',
 } as const
 
+// Admin Types
+export interface AdminUser {
+  id: string
+  email: string
+  full_name: string
+  role: 'admin' | 'manager' | 'staff'
+  created_at: string
+  last_login?: string
+}
+
+export interface AdminLoginRequest {
+  email: string
+  password: string
+}
+
+export interface AdminLoginResponse {
+  access_token: string
+  user: AdminUser
+  expires_in: number
+}
+
+export interface AdminStats {
+  total_orders: number
+  total_revenue: number
+  orders_today: number
+  revenue_today: number
+  most_popular_items: Array<{
+    item_name: string
+    order_count: number
+    revenue: number
+  }>
+  recent_orders: Order[]
+}
+
+export interface OrderWithDetails extends Order {
+  customer_name?: string
+  customer_email?: string
+  customer_phone?: string
+  delivery_address?: Address
+  payment_status: 'PENDING' | 'COMPLETED' | 'FAILED' | 'REFUNDED'
+  created_at: string
+  updated_at: string
+}
+
 // App Configuration
 export const APP_CONFIG = {
   API_BASE_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000',

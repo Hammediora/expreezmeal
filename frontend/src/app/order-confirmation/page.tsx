@@ -58,7 +58,7 @@ export default function OrderConfirmationPage() {
               Order Not Found
             </h1>
             <p className="text-lg text-neutral-600 mb-8">
-              {error || 'We couldn\'t find the order you\'re looking for.'}
+              {error || "We couldn't find the order you're looking for."}
             </p>
             <Link href="/" className="btn-primary">
               Return Home
@@ -76,16 +76,15 @@ export default function OrderConfirmationPage() {
 
       <section className="section-padding">
         <div className="container-custom">
-          <div className="max-w-2xl mx-auto text-center">
-
+          <div className="max-w-2xl mx-auto text-center px-4">
             {/* Success Icon */}
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ duration: 0.5 }}
-              className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-8"
+              className="w-16 h-16 sm:w-20 sm:h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6 sm:mb-8"
             >
-              <Check className="w-10 h-10 text-green-600" />
+              <Check className="w-8 h-8 sm:w-10 sm:h-10 text-green-600" />
             </motion.div>
 
             {/* Header */}
@@ -94,10 +93,10 @@ export default function OrderConfirmationPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
             >
-              <h1 className="text-4xl md:text-5xl font-display font-bold text-neutral-800 mb-4">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-display font-bold text-neutral-800 mb-3 sm:mb-4">
                 Order Confirmed!
               </h1>
-              <p className="text-xl text-neutral-600 mb-8">
+              <p className="text-lg sm:text-xl text-neutral-600 mb-6 sm:mb-8">
                 Thank you for your order! We&apos;re preparing your delicious Nigerian cuisine.
               </p>
             </motion.div>
@@ -110,9 +109,7 @@ export default function OrderConfirmationPage() {
               className="card p-8 text-left mb-8"
             >
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-display font-bold text-neutral-800">
-                  Order Details
-                </h2>
+                <h2 className="text-2xl font-display font-bold text-neutral-800">Order Details</h2>
                 <span className="text-sm text-neutral-500">
                   Order #{order.id.slice(-8).toUpperCase()}
                 </span>
@@ -120,10 +117,15 @@ export default function OrderConfirmationPage() {
 
               {/* Order Items */}
               <div className="space-y-4 mb-6">
-                {order.items.map((item) => (
-                  <div key={item.id} className="flex justify-between items-center py-3 border-b border-neutral-100">
+                {order.items.map(item => (
+                  <div
+                    key={item.id}
+                    className="flex justify-between items-center py-3 border-b border-neutral-100"
+                  >
                     <div>
-                      <h4 className="font-medium text-neutral-800">Item #{item.menu_item_id.slice(-6)}</h4>
+                      <h4 className="font-medium text-neutral-800">
+                        Item #{item.menu_item_id.slice(-6)}
+                      </h4>
                       <p className="text-sm text-neutral-600">Quantity: {item.quantity}</p>
                       {item.special_instructions && (
                         <p className="text-sm text-neutral-500 italic">
@@ -169,20 +171,22 @@ export default function OrderConfirmationPage() {
                   </span>
                 </div>
                 <p className="text-sm text-neutral-600 mt-2">
-                  Your order was placed on {new Date(order.created_at).toLocaleDateString('en-US', {
+                  Your order was placed on{' '}
+                  {new Date(order.created_at).toLocaleDateString('en-US', {
                     weekday: 'long',
                     year: 'numeric',
                     month: 'long',
                     day: 'numeric',
                     hour: '2-digit',
-                    minute: '2-digit'
+                    minute: '2-digit',
                   })}
                 </p>
                 {order.estimated_delivery_time && (
                   <p className="text-sm text-neutral-600">
-                    Estimated delivery: {new Date(order.estimated_delivery_time).toLocaleTimeString('en-US', {
+                    Estimated delivery:{' '}
+                    {new Date(order.estimated_delivery_time).toLocaleTimeString('en-US', {
                       hour: '2-digit',
-                      minute: '2-digit'
+                      minute: '2-digit',
                     })}
                   </p>
                 )}

@@ -22,4 +22,4 @@ stripe
 waitress
 psycopg2-binary
 resend
-
+pyjwt

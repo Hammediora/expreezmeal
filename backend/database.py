@@ -18,11 +18,28 @@ class User(db.Model):
     is_superuser = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     last_login = db.Column(db.DateTime)
+    last_activity = db.Column(db.DateTime)
 
     # Relationships
     addresses = db.relationship('Address', backref='user', lazy=True)
     orders = db.relationship('Order', backref='user', lazy=True)
+    admin_sessions = db.relationship('AdminSession', backref='user', lazy=True, cascade='all, delete-orphan')
     # reviews = db.relationship('Review', backref='user', lazy=True)  # Review model not defined
+
+class AdminSession(db.Model):
+    __tablename__ = 'admin_sessions'
+
+    id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
+    user_id = db.Column(db.String(36), db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    session_token = db.Column(db.String(255), unique=True, nullable=False)
+    jwt_token_id = db.Column(db.String(36), unique=True, nullable=False)  # jti claim from JWT
+    ip_address = db.Column(db.String(45))  # Support IPv6
+    user_agent = db.Column(db.Text)
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    last_activity = db.Column(db.DateTime, default=datetime.utcnow)
+    expires_at = db.Column(db.DateTime, nullable=False)
+    revoked_at = db.Column(db.DateTime)
 
 class Address(db.Model):
     __tablename__ = 'addresses'
@@ -138,6 +155,7 @@ class OrderItem(db.Model):
 
     # Relationships
     customizations = db.relationship('OrderItemCustomization', backref='order_item', lazy=True, cascade='all, delete-orphan')
+    menu_item = db.relationship('MenuItem', backref='order_items', lazy=True)
 
 class OrderItemCustomization(db.Model):
     __tablename__ = 'order_item_customizations'
@@ -176,6 +194,32 @@ class DeliveryServiceOrder(db.Model):
     status = db.Column(db.String(50))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+class Promotion(db.Model):
+    __tablename__ = 'promotions'
+
+    id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
+    name = db.Column(db.String(255), nullable=False)
+    description = db.Column(db.Text)
+    promo_code = db.Column(db.String(50), unique=True)  # Optional promo code
+    discount_type = db.Column(db.String(20), nullable=False)  # 'PERCENTAGE', 'FIXED_AMOUNT', 'BUY_ONE_GET_ONE'
+    discount_value = db.Column(db.Numeric(10, 2))  # Percentage (0-100) or fixed amount
+    minimum_order_amount = db.Column(db.Numeric(10, 2))
+    maximum_discount = db.Column(db.Numeric(10, 2))  # For percentage discounts
+    applies_to = db.Column(db.String(20), nullable=False)  # 'ALL', 'CATEGORY', 'ITEM'
+    category_id = db.Column(db.String(36), db.ForeignKey('categories.id'))  # If applies to specific category
+    menu_item_id = db.Column(db.String(36), db.ForeignKey('menu_items.id'))  # If applies to specific item
+    start_date = db.Column(db.DateTime, nullable=False)
+    end_date = db.Column(db.DateTime, nullable=False)
+    usage_limit = db.Column(db.Integer)  # Maximum number of uses
+    usage_count = db.Column(db.Integer, default=0)
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relationships
+    category = db.relationship('Category', backref='promotions', lazy=True)
+    menu_item = db.relationship('MenuItem', backref='promotions', lazy=True)
 
 def init_db(app):
     db.init_app(app)

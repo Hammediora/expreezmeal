@@ -8,6 +8,7 @@ from flask_session import Session
 from flask_cors import CORS
 import redis
 import stripe
+import jwt
 from functools import wraps
 from datetime import datetime
 from email_service import email_service
@@ -45,6 +46,10 @@ from database import (User, Address, Category, MenuItem, Order, OrderItem,
                      Payment, DeliveryServiceOrder, CustomizationOption,
                      OptionChoice, OrderItemCustomization)
 
+# Import admin routes
+from admin_routes import admin_bp
+from admin_menu_routes import admin_menu
+
 # Flask session & Redis setup
 token = secrets.token_hex(64)
 app.secret_key = token
@@ -56,6 +61,10 @@ app.config['SESSION_KEY_PREFIX'] = "expreezmeal_"  # Prefix for Redis sessions
 
 server_session = Session(app)
 CORS(app, origins=['http://localhost:3000', 'http://localhost:3001', 'http://127.0.0.1:3000', 'http://127.0.0.1:3001'])
+
+# Register admin blueprints
+app.register_blueprint(admin_bp)
+app.register_blueprint(admin_menu)
 
 def login_required(f):
     @wraps(f)
@@ -574,7 +583,7 @@ def confirm_payment(order_id):
         # Automatically send confirmation email if customer email is in metadata
         customer_email = intent.metadata.get('customer_email')
         customer_name = intent.metadata.get('customer_name', 'Customer')
-        
+
         if customer_email:
             try:
                 # Prepare order data for email
@@ -582,13 +591,13 @@ def confirm_payment(order_id):
                 for item in order.order_items:
                     menu_item = MenuItem.query.get(item.menu_item_id)
                     customizations = []
-                    
+
                     for custom in item.customizations:
                         option = CustomizationOption.query.get(custom.customization_option_id)
                         choice = OptionChoice.query.get(custom.option_choice_id)
                         if option and choice:
                             customizations.append(f"{option.name}: {choice.name}")
-                    
+
                     order_items.append({
                         'name': menu_item.name if menu_item else 'Item',
                         'quantity': item.quantity,
@@ -614,7 +623,7 @@ def confirm_payment(order_id):
                 # Send confirmation email
                 email_service.send_order_confirmation(order_data, customer_info)
                 print(f"✅ Confirmation email sent to {customer_email} for order {order_id}")
-                
+
             except Exception as email_error:
                 print(f"❌ Failed to send confirmation email: {email_error}")
                 # Don't fail the payment confirmation if email fails
@@ -644,7 +653,7 @@ def send_order_confirmation(order_id):
         customer_email = data.get('email')
         customer_name = data.get('name', 'Customer')
         customer_phone = data.get('phone', '')
-        
+
         if not customer_email:
             return jsonify({'error': 'Email address required'}), 400
 
@@ -653,13 +662,13 @@ def send_order_confirmation(order_id):
         for item in order.order_items:
             menu_item = MenuItem.query.get(item.menu_item_id)
             customizations = []
-            
+
             for custom in item.customizations:
                 option = CustomizationOption.query.get(custom.customization_option_id)
                 choice = OptionChoice.query.get(custom.option_choice_id)
                 if option and choice:
                     customizations.append(f"{option.name}: {choice.name}")
-            
+
             order_items.append({
                 'name': menu_item.name if menu_item else 'Item',
                 'quantity': item.quantity,
@@ -684,7 +693,7 @@ def send_order_confirmation(order_id):
 
         # Send email using the email service
         success = email_service.send_order_confirmation(order_data, customer_info)
-        
+
         if success:
             return jsonify({
                 'message': 'Confirmation email sent successfully',
@@ -705,10 +714,10 @@ def update_order_status(order_id):
         new_status = data.get('status')
         customer_email = data.get('customer_email')
         customer_name = data.get('customer_name', 'Customer')
-        
+
         if not new_status:
             return jsonify({'error': 'Status is required'}), 400
-            
+
         # Valid statuses
         valid_statuses = ['PENDING', 'CONFIRMED', 'PREPARING', 'READY', 'COMPLETED', 'CANCELLED']
         if new_status not in valid_statuses:
@@ -755,10 +764,10 @@ def notify_new_menu_item():
         data = request.get_json()
         item_id = data.get('item_id')
         customer_emails = data.get('customer_emails', [])
-        
+
         if not item_id:
             return jsonify({'error': 'item_id is required'}), 400
-            
+
         if not customer_emails:
             return jsonify({'error': 'customer_emails list is required'}), 400
 
@@ -776,7 +785,7 @@ def notify_new_menu_item():
 
         # Send notifications
         success = email_service.send_new_menu_item_notification(item_data, customer_emails)
-        
+
         if success:
             return jsonify({
                 'message': f'New menu item notifications sent to {len(customer_emails)} customers',
@@ -795,7 +804,7 @@ def test_email():
     try:
         data = request.get_json()
         test_email = data.get('email', 'hammedbello97@gmail.com')
-        
+
         # Test order data
         order_data = {
             'order_id': 'TEST-123',
@@ -812,16 +821,16 @@ def test_email():
                 }
             ]
         }
-        
+
         customer_info = {
             'name': 'Test Customer',
             'email': test_email,
             'phone': '+1234567890'
         }
-        
+
         # Send test email
         success = email_service.send_order_confirmation(order_data, customer_info)
-        
+
         if success:
             return jsonify({
                 'message': 'Test email sent successfully!',
@@ -829,7 +838,7 @@ def test_email():
             })
         else:
             return jsonify({'error': 'Failed to send test email'}), 500
-            
+
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -839,22 +848,22 @@ def update_order_status_api():
     """Update order status and send notification email (for admin dashboard)"""
     try:
         data = request.get_json()
-        
+
         # Extract data
         order_id = data.get('order_id')
         customer_email = data.get('customer_email')
         customer_name = data.get('customer_name', 'Customer')
         new_status = data.get('new_status')
-        
+
         if not all([order_id, customer_email, new_status]):
             return jsonify({'error': 'Missing required fields'}), 400
-        
+
         # For testing purposes, create mock order data
         order_data = {
             'order_id': order_id,
             'status': new_status,
             'subtotal': 1299,  # $12.99 in cents
-            'tax_amount': 130,  # $1.30 in cents  
+            'tax_amount': 130,  # $1.30 in cents
             'total_amount': 1429,  # $14.29 in cents
             'items': [
                 {
@@ -865,16 +874,16 @@ def update_order_status_api():
                 }
             ]
         }
-        
+
         customer_info = {
             'name': customer_name,
             'email': customer_email,
             'phone': data.get('customer_phone', '')
         }
-        
+
         # Send status update email
         success = email_service.send_order_status_update(order_data, customer_info, new_status)
-        
+
         if success:
             return jsonify({
                 'message': f'Status update email sent to {customer_email}',
@@ -883,7 +892,7 @@ def update_order_status_api():
             })
         else:
             return jsonify({'error': 'Failed to send status update email'}), 500
-            
+
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

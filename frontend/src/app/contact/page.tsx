@@ -13,16 +13,18 @@ export default function ContactPage() {
     email: '',
     phone: '',
     subject: '',
-    message: ''
+    message: '',
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitMessage, setSubmitMessage] = useState<string | null>(null)
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }))
   }
 
@@ -33,12 +35,12 @@ export default function ContactPage() {
     try {
       // TODO: Implement actual form submission to backend
       await new Promise(resolve => setTimeout(resolve, 2000)) // Simulate API call
-      setSubmitMessage('Thank you for your message! We\'ll get back to you soon.')
+      setSubmitMessage("Thank you for your message! We'll get back to you soon.")
       setFormData({ name: '', email: '', phone: '', subject: '', message: '' })
     } catch (error) {
-     setSubmitMessage(
-       `Sorry, there was an error sending your message: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again.`
-     )
+      setSubmitMessage(
+        `Sorry, there was an error sending your message: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again.`
+      )
     } finally {
       setIsSubmitting(false)
     }
@@ -49,14 +51,14 @@ export default function ContactPage() {
       <Navbar />
 
       {/* Hero Section */}
-      <section className="relative h-96 flex items-center justify-center hero-bg">
+      <section className="relative h-72 sm:h-80 md:h-96 flex items-center justify-center hero-bg">
         <div className="absolute inset-0 bg-black bg-opacity-50" />
-        <div className="relative z-10 text-center text-white max-w-4xl mx-auto px-4">
+        <div className="relative z-10 text-center text-white max-w-4xl mx-auto px-4 sm:px-6">
           <motion.h1
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            className="text-4xl md:text-6xl font-display font-bold mb-4"
+            className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-bold mb-3 sm:mb-4"
           >
             Contact Us
           </motion.h1>
@@ -65,7 +67,7 @@ export default function ContactPage() {
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="text-xl md:text-2xl text-neutral-200"
+            className="text-base sm:text-lg md:text-xl lg:text-2xl text-neutral-200"
           >
             We&apos;d love to hear from you. Get in touch with us today.
           </motion.p>
