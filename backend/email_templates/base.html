@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block header_title %}{{ email_title }}{% endblock %} - ExpreeZmeal</title>
+    <style>
+        /* Email-safe CSS */
+        .email-container {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 12px;
+            padding: 40px;
+            margin: 20px auto;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .email-header {
+            text-align: center;
+            margin-bottom: 32px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px 10px 0 0;
+        }
+
+        .email-header h1 {
+            margin: 0;
+            font-size: 28px;
+        }
+
+        .email-header p {
+            margin: 10px 0 0 0;
+            font-size: 18px;
+        }
+
+        .content {
+            background: white;
+            padding: 30px;
+            border: 1px solid #ddd;
+            border-radius: 0 0 10px 10px;
+        }
+
+        .content h2 {
+            color: #667eea;
+            margin-top: 0;
+        }
+
+        .footer {
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+            text-align: center;
+            color: #666;
+        }
+
+        .footer a {
+            color: #667eea;
+        }
+
+        .footer .thanks {
+            margin-top: 15px;
+        }
+
+        .email-title {
+            color: #0f766e;
+            margin-bottom: 16px;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .email-subtitle {
+            color: #6b7280;
+            font-size: 18px;
+            margin: 0;
+        }
+
+        .inquiry-summary {
+            background-color: #f0fdfa;
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 24px;
+            border-left: 4px solid #0f766e;
+        }
+
+        .section-title {
+            color: #0f766e;
+            margin-bottom: 16px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .summary-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .summary-table td.label {
+            padding: 8px 0;
+            color: #6b7280;
+            font-weight: 600;
+            width: 120px;
+        }
+
+        .summary-table td.value {
+            padding: 8px 0;
+            color: #1f2937;
+        }
+
+        .summary-table td.value.monospace {
+            font-family: monospace;
+            font-size: 14px;
+        }
+
+        .summary-table td.value.font-bold {
+            font-weight: 600;
+        }
+
+        .inquiry-badge {
+            background-color: #0f766e;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .message-section {
+            background-color: #fefefe;
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 24px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .message-content {
+            color: #374151;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            font-size: 16px;
+            background-color: #f9fafb;
+            padding: 16px;
+            border-radius: 6px;
+            border-left: 3px solid #d4af37;
+        }
+
+        .next-steps {
+            background-color: #fef3c7;
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 24px;
+            border-left: 4px solid #d4af37;
+        }
+
+        .next-steps-title {
+            color: #d4af37;
+            margin-bottom: 16px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .steps-content {
+            color: #374151;
+            line-height: 1.6;
+        }
+
+        .steps-content p {
+            margin: 0 0 12px 0;
+        }
+
+        .steps-content p:last-child {
+            margin: 0;
+        }
+
+        .response-time {
+            background-color: #ecfdf5;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .response-title {
+            color: #047857;
+            margin: 0 0 8px 0;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .response-info {
+            color: #065f46;
+            margin: 0;
+            font-size: 14px;
+        }
+
+        .contact-info {
+            text-align: center;
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .contact-title {
+            color: #1f2937;
+            margin-bottom: 16px;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .contact-button {
+            margin-bottom: 16px;
+        }
+
+        .phone-link {
+            background-color: #0f766e;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            margin-right: 12px;
+            display: inline-block;
+        }
+
+        .hours {
+            color: #6b7280;
+            font-size: 14px;
+            margin: 0;
+        }
+
+        .email-footer {
+            text-align: center;
+        }
+
+        .footer-main {
+            color: #6b7280;
+            font-size: 14px;
+            margin: 0 0 8px 0;
+        }
+
+        .footer-reference {
+            color: #6b7280;
+            font-size: 12px;
+            margin: 0;
+        }
+
+        /* Admin template styles */
+        .admin-container {
+            background-color: #ffffff;
+            border-radius: 12px;
+            padding: 40px;
+            margin: 20px 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .admin-title {
+            color: #1f2937;
+            margin-bottom: 24px;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .inquiry-details {
+            background-color: #f8fafc;
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 24px;
+            border-left: 4px solid #0f766e;
+        }
+
+        .customer-info {
+            background-color: #f0fdfa;
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 24px;
+            border-left: 4px solid #d4af37;
+        }
+
+        .customer-title {
+            color: #d4af37;
+            margin-bottom: 16px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .customer-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .customer-table td.label {
+            padding: 8px 0;
+            color: #6b7280;
+            font-weight: 600;
+            width: 140px;
+        }
+
+        .customer-table td.value {
+            padding: 8px 0;
+            color: #1f2937;
+        }
+
+        .customer-table td.value.font-bold {
+            font-weight: 600;
+        }
+
+        .customer-table a {
+            color: #0f766e;
+            text-decoration: none;
+        }
+
+        .message-admin {
+            background-color: #fefefe;
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 24px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .message-admin-title {
+            color: #1f2937;
+            margin-bottom: 16px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .message-admin-content {
+            color: #374151;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            font-size: 16px;
+        }
+
+        .catering-details {
+            background-color: #fef3c7;
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 24px;
+            border-left: 4px solid #f59e0b;
+        }
+
+        .catering-title {
+            color: #f59e0b;
+            margin-bottom: 16px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .catering-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .catering-table td.label {
+            padding: 8px 0;
+            color: #6b7280;
+            font-weight: 600;
+            width: 140px;
+        }
+
+        .catering-table td.value {
+            padding: 8px 0;
+            color: #1f2937;
+        }
+
+        .catering-table td.value.font-bold {
+            font-weight: 600;
+        }
+
+        .special-requirements {
+            margin-top: 16px;
+        }
+
+        .special-requirements .label {
+            color: #6b7280;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .special-requirements .content {
+            color: #374151;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
+        .action-buttons {
+            text-align: center;
+            margin-top: 32px;
+        }
+
+        .reply-button {
+            background-color: #0f766e;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            margin-right: 12px;
+            display: inline-block;
+        }
+
+        .call-button {
+            background-color: #d4af37;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .admin-footer {
+            color: #6b7280;
+            font-size: 14px;
+            margin: 0;
+            text-align: center;
+        }
+
+        /* Legacy email template styles for backward compatibility */
+        .info-box {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .info-box h3 {
+            margin-top: 0;
+            color: #333;
+        }
+
+        .center-text {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .btn {
+            background-color: #667eea;
+            color: white;
+            padding: 15px 30px;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: bold;
+            display: inline-block;
+        }
+
+        .promo-code {
+            color: #667eea;
+            font-size: 18px;
+        }
+
+        .footer-section {
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+            text-align: center;
+            color: #666;
+        }
+
+        .status-alert {
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 20px 0;
+            color: white;
+            font-weight: bold;
+            background-color: #667eea;
+        }
+
+        .status-message {
+            margin: 0;
+            font-size: 20px;
+        }
+
+        .status-text {
+            font-weight: bold;
+        }
+
+        .pickup-location {
+            background-color: #e8f5e8;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #28a745;
+            margin: 20px 0;
+        }
+
+        .pickup-location h3 {
+            margin-top: 0;
+            color: #155724;
+        }
+
+        .pickup-location p {
+            margin: 5px 0;
+            color: #155724;
+        }
+
+        .order-status {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .items-section {
+            margin: 25px 0;
+        }
+
+        .items-title {
+            color: #333;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .item-row {
+            border-bottom: 1px solid #eee;
+            padding: 10px 0;
+        }
+
+        .item-row h4 {
+            margin: 0;
+            color: #333;
+        }
+
+        .item-row p {
+            margin: 5px 0;
+            color: #666;
+        }
+
+        .customizations {
+            margin: 5px 0;
+            color: #888;
+            font-size: 14px;
+        }
+
+        .summary-box {
+            background-color: #667eea;
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .summary-box h3 {
+            margin-top: 0;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+        }
+
+        .summary-total {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+            font-size: 18px;
+            font-weight: bold;
+            border-top: 1px solid rgba(255,255,255,0.3);
+            padding-top: 10px;
+        }
+
+        .notification-text {
+            font-size: 16px;
+            color: #666;
+        }
+
+        .item-image {
+            max-width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .item-title {
+            margin-top: 0;
+            color: #333;
+            font-size: 24px;
+        }
+
+        .item-description {
+            color: #666;
+            font-size: 16px;
+            margin: 10px 0;
+        }
+
+        .item-price {
+            color: #667eea;
+            font-size: 20px;
+            font-weight: bold;
+            margin: 15px 0;
+        }
+
+        .thank-you {
+            margin-top: 15px;
+        }
+
+        .warning-box {
+            background-color: #fff3cd;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #ffc107;
+            margin: 20px 0;
+        }
+
+        .warning-title {
+            margin-top: 0;
+            color: #856404;
+        }
+
+        .warning-text {
+            margin: 5px 0;
+            color: #856404;
+        }
+
+        .thank-you-message {
+            font-size: 18px;
+            color: #667eea;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        {% block header_section %}
+        <div class="email-header">
+            <h1>🍖 ExpreeZmeal</h1>
+            <p>{% block header_subtitle %}{% if header_subtitle %}{{ header_subtitle }}{% endif %}{% endblock %}</p>
+        </div>
+        {% endblock %}
+
+        <div class="content">
+            {% block main_content %}
+            {% block content %}
+            <!-- Template content goes here -->
+            {% endblock %}
+            {% endblock %}
+
+            <div class="footer">
+                {% block footer_content %}
+                <p>Questions? Contact us at <a href="mailto:support@expreezmeal.com">support@expreezmeal.com</a></p>
+                <p class="thanks">Thank you for choosing ExpreeZmeal! 🙏</p>
+                {% endblock %}
+            </div>
+        </div>
+    </div>
+</body>
+</html>

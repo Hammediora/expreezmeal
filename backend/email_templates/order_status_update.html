@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Hi {{ customer_name }}! 👋</h2>
+
+<div class="status-alert">
+    <h3 class="status-message">{{ status_message }}</h3>
+</div>
+
+<div class="info-box">
+    <h3>Order Details</h3>
+    <p><strong>Order ID:</strong> #{{ order_id }}</p>
+    <p><strong>Status:</strong> <span class="status-text">{{ new_status }}</span></p>
+    <p><strong>Total:</strong> ${{ "%.2f"|format(total_amount / 100) }}</p>
+</div>
+
+{% if new_status == "READY" %}
+<div class="pickup-location">
+    <h3> Ready for Pickup!</h3>
+    <p><strong>ExpreeZmeal Kitchen</strong></p>
+    <p>{{ pickup_address.street }}<br>{{ pickup_address.city }}, {{ pickup_address.state }} {{ pickup_address.zip }}</p>
+    <p>{{ pickup_address.phone }}</p>
+</div>
+{% endif %}
+{% endblock %}

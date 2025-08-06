@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Welcome to ExpreeZmeal! 🎉</h2>
+
+<p>Hi {{ customer_name }},</p>
+
+<p>Welcome to ExpreeZmeal - your destination for delicious, authentic cuisine!</p>
+
+<div class="info-box">
+    <h3>What Makes Us Special</h3>
+    <ul>
+        <li>Premium quality ingredients</li>
+        <li>Fresh, made-to-order meals</li>
+        <li>Quick pickup service</li>
+        <li>Customizable options</li>
+    </ul>
+</div>
+
+<div class="center-text">
+    <a href="{{ menu_url }}" class="btn">Browse Our Menu</a>
+</div>
+
+<div class="center-text">
+    <p>Use code <strong class="promo-code">WELCOME10</strong> for 10% off your first order!</p>
+</div>
+
+<div class="footer-section">
+    <p>Ready to order? We can't wait to serve you!</p>
+</div>
+{% endblock %}

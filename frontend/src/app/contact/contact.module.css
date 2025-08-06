@@ -1,0 +1,24 @@
+/* Custom Swiper Styles for Contact Page */
+.contactSwiper .swiper-pagination {
+  position: relative !important;
+  margin-top: 1.5rem;
+}
+
+.contactSwiper .swiper-pagination-bullet {
+  width: 12px;
+  height: 12px;
+  background: rgba(255, 255, 255, 0.5);
+  opacity: 1;
+  transition: all 0.3s ease;
+}
+
+.contactSwiper .swiper-pagination-bullet-active {
+  background: #d4af37;
+  transform: scale(1.2);
+}
+
+@media (max-width: 768px) {
+  .contactSwiper .swiper-slide {
+    padding: 0 1rem;
+  }
+}

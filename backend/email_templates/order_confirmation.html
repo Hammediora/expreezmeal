@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Thank you, {{ customer_name }}! </h2>
+
+<p>Your delicious order has been confirmed and is being prepared with love!</p>
+
+<div class="info-box">
+    <h3>📋 Order Details</h3>
+    <p><strong>Order ID:</strong> #{{ order_id }}</p>
+    <p><strong>Status:</strong> <span class="order-status">{{ order_status }}</span></p>
+    <p><strong>Order Type:</strong> Pickup</p>
+    <p><strong>Estimated Ready Time:</strong> {{ estimated_time }}</p>
+</div>
+
+<div class="items-section">
+    <h3 class="items-title">🛍 Your Items</h3>
+    {% for item in order_items %}
+    <div class="item-row">
+        <h4>{{ item.name }} x {{ item.quantity }}</h4>
+        <p>${{ "%.2f"|format(item.price) }}</p>
+        {% if item.customizations %}
+        <p class="customizations">{{ item.customizations }}</p>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+
+<div class="summary-box">
+    <h3> Order Summary</h3>
+    <div class="summary-row">
+        <span>Subtotal:</span>
+        <span>${{ "%.2f"|format(subtotal / 100) }}</span>
+    </div>
+    <div class="summary-row">
+        <span>Tax:</span>
+        <span>${{ "%.2f"|format(tax_amount / 100) }}</span>
+    </div>
+    <div class="summary-total">
+        <span>Total:</span>
+        <span>${{ "%.2f"|format(total_amount / 100) }}</span>
+    </div>
+</div>
+
+<div class="pickup-location">
+    <h3>📍 Pickup Location</h3>
+    <p><strong>ExpreeZmeal Kitchen</strong></p>
+    <p>{{ pickup_address.street }}<br>{{ pickup_address.city }}, {{ pickup_address.state }} {{ pickup_address.zip }}</p>
+    <p> {{ pickup_address.phone }}</p>
+</div>
+
+<div class="center-text">
+    <p class="notification-text">We'll send you a notification when your order is ready!</p>
+</div>
+{% endblock %}

@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: expreezmeal-backend-service
+  namespace: dev-namespace
+spec:
+  selector:
+    app: expreezmeal-backend
+  ports:
+  - name: http
+    port: 5000
+    targetPort: 5000
+    nodePort: 30001
+  type: NodePort
