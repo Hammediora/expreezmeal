@@ -4,5 +4,8 @@
     },
     "files.associations": {
         "*.html": "html"
-    }
+    },
+    "githubPullRequests.ignoredPullRequestBranches": [
+        "dev"
+    ]
 }
