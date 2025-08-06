@@ -122,14 +122,6 @@ const Navbar = () => {
                 </span>
               )}
             </button>
-
-            {/* Order Now Button */}
-            <Link
-              href="/menu"
-              className="bg-secondary-500 hover:bg-secondary-600 text-white px-6 py-2 rounded-lg font-medium transition-all duration-300 hover:shadow-lg transform hover:-translate-y-0.5"
-            >
-              Order Now
-            </Link>
           </div>
 
           {/* Mobile menu button */}
@@ -177,17 +169,6 @@ const Navbar = () => {
                   {item.name}
                 </Link>
               ))}
-
-              {/* Order Now Button - Mobile */}
-              <div className="px-3 pt-2">
-                <Link
-                  href="/menu"
-                  className="bg-secondary-500 hover:bg-secondary-600 text-white px-4 py-2.5 rounded-lg font-medium transition-all duration-300 hover:shadow-lg text-center block w-full text-sm"
-                  onClick={() => setIsOpen(false)}
-                >
-                  Order Now
-                </Link>
-              </div>
             </div>
           </motion.div>
         )}
