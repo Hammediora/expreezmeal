@@ -159,7 +159,7 @@ function OrderConfirmationContent() {
                 )}
                 <div className="flex justify-between text-lg font-bold text-neutral-800 pt-2 border-t">
                   <span>Total</span>
-                  <span>{formatCurrency(order.total)}</span>
+                  <span>{formatCurrency(order.total_amount)}</span>
                 </div>
               </div>
 

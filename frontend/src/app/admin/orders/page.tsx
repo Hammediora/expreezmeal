@@ -14,90 +14,69 @@ import {
 } from 'lucide-react'
 import AdminLayout from '@/components/admin/AdminLayout'
 import ProtectedRoute from '@/components/admin/ProtectedRoute'
-import { OrderWithDetails } from '@/types'
-import { formatCurrency } from '@/lib/api'
+import { OrderWithDetails, OrderStatus } from '@/types'
+import { formatCurrency, handleApiError, formatOrderNumber } from '@/lib/api'
+import { adminApiClient } from '@/lib/adminApi'
 
 const OrdersPage: React.FC = () => {
   const [orders, setOrders] = useState<OrderWithDetails[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null)
+  const [successMessage, setSuccessMessage] = useState('')
 
   useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        // Mock data for demonstration
-        const mockOrders: OrderWithDetails[] = [
-          {
-            id: 'ORD-001',
-            status: 'PREPARING',
-            order_type: 'DELIVERY',
-            subtotal: 25.5,
-            tax: 2.24,
-            tip: 3.83,
-            total: 31.57,
-            created_at: '2024-08-04T10:30:00Z',
-            estimated_delivery_time: '2024-08-04T11:15:00Z',
-            special_instructions: 'No onions please',
-            items: [
-              {
-                id: 'OI-001',
-                menu_item_id: 'MI-001',
-                quantity: 1,
-                unit_price: 12.99,
-                total_price: 12.99,
-                special_instructions: 'Extra spicy',
-              },
-              {
-                id: 'OI-002',
-                menu_item_id: 'MI-002',
-                quantity: 1,
-                unit_price: 12.51,
-                total_price: 12.51,
-              },
-            ],
-            customer_name: 'John Doe',
-            customer_email: 'john@example.com',
-            customer_phone: '+1234567890',
-            payment_status: 'COMPLETED',
-            updated_at: '2024-08-04T10:35:00Z',
-          },
-          {
-            id: 'ORD-002',
-            status: 'READY',
-            order_type: 'PICKUP',
-            subtotal: 18.5,
-            tax: 1.62,
-            tip: 0,
-            total: 20.12,
-            created_at: '2024-08-04T09:15:00Z',
-            items: [
-              {
-                id: 'OI-003',
-                menu_item_id: 'MI-003',
-                quantity: 2,
-                unit_price: 9.25,
-                total_price: 18.5,
-              },
-            ],
-            customer_name: 'Jane Smith',
-            customer_email: 'jane@example.com',
-            customer_phone: '+1987654321',
-            payment_status: 'COMPLETED',
-            updated_at: '2024-08-04T09:45:00Z',
-          },
-        ]
-
-        setOrders(mockOrders)
-      } catch (error) {
-        console.error('Failed to fetch orders:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
     fetchOrders()
   }, [])
+
+  const fetchOrders = async () => {
+    try {
+      setLoading(true)
+      setError('')
+      const ordersData = await adminApiClient.getAllOrders()
+      setOrders(ordersData.orders)
+    } catch (err: unknown) {
+      setError(handleApiError(err))
+      console.error('Failed to fetch orders:', err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const updateOrderStatus = async (orderId: string, newStatus: string) => {
+    try {
+      setUpdatingOrderId(orderId)
+      setError('')
+      setSuccessMessage('')
+
+      const response = await adminApiClient.updateOrderStatus(orderId, newStatus)
+
+      // Update the order in the local state
+      setOrders(orders =>
+        orders.map(order =>
+          order.id === orderId ? { ...order, status: newStatus as OrderStatus } : order
+        )
+      )
+
+      // Show success message with email notification status
+      const emailStatus = response.email_sent
+        ? 'Email notification sent to customer.'
+        : 'Status updated (email notification failed).'
+      setSuccessMessage(
+        `Order ${orderId} status updated to ${newStatus.replace('_', ' ').toLowerCase()}. ${emailStatus}`
+      )
+
+      // Clear success message after 5 seconds
+      setTimeout(() => setSuccessMessage(''), 5000)
+    } catch (err: unknown) {
+      setError(handleApiError(err))
+      console.error('Failed to update order status:', err)
+    } finally {
+      setUpdatingOrderId(null)
+    }
+  }
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -174,6 +153,28 @@ const OrdersPage: React.FC = () => {
         subtitle={`Manage customer orders • ${filteredOrders.length} orders`}
       >
         <div className="space-y-6">
+          {/* Success Message */}
+          {successMessage && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-green-50 border border-green-200 rounded-lg p-4"
+            >
+              <p className="text-green-600 font-medium">{successMessage}</p>
+            </motion.div>
+          )}
+
+          {/* Error Display */}
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-red-50 border border-red-200 rounded-lg p-4"
+            >
+              <p className="text-red-600 font-medium">{error}</p>
+            </motion.div>
+          )}
+
           {/* Filters and Search */}
           <div className="bg-white rounded-xl shadow-sm border border-neutral-200 p-6">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
@@ -210,8 +211,12 @@ const OrdersPage: React.FC = () => {
                   </select>
                 </div>
 
-                <button className="flex items-center space-x-2 px-4 py-2 border border-neutral-300 rounded-lg hover:bg-neutral-50 transition-colors">
-                  <RefreshCw className="w-4 h-4" />
+                <button
+                  onClick={fetchOrders}
+                  disabled={loading}
+                  className="flex items-center space-x-2 px-4 py-2 border border-neutral-300 rounded-lg hover:bg-neutral-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
                   <span>Refresh</span>
                 </button>
               </div>
@@ -243,9 +248,14 @@ const OrdersPage: React.FC = () => {
                       className="hover:bg-neutral-50 transition-colors"
                     >
                       <td className="py-4 px-6">
-                        <span className="font-mono text-sm font-medium text-neutral-800">
-                          {order.id}
-                        </span>
+                        <div>
+                          <span className="font-mono text-sm font-bold text-secondary-600">
+                            {formatOrderNumber(order.id, order.created_at)}
+                          </span>
+                          <p className="text-xs text-neutral-400 mt-1">
+                            {order.id.split('-')[0]}...
+                          </p>
+                        </div>
                       </td>
 
                       <td className="py-4 px-6">
@@ -270,17 +280,36 @@ const OrdersPage: React.FC = () => {
                       </td>
 
                       <td className="py-4 px-6">
-                        <span
-                          className={`inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusColor(order.status)}`}
-                        >
-                          {getStatusIcon(order.status)}
-                          <span>{order.status.replace('_', ' ')}</span>
-                        </span>
+                        <div className="relative">
+                          <select
+                            value={order.status}
+                            onChange={e => updateOrderStatus(order.id, e.target.value)}
+                            disabled={updatingOrderId === order.id}
+                            className={`appearance-none bg-transparent border-0 px-2.5 py-1 rounded-full text-xs font-medium cursor-pointer focus:outline-none focus:ring-2 focus:ring-secondary-500 disabled:opacity-50 disabled:cursor-not-allowed ${getStatusColor(order.status)}`}
+                            aria-label={`Update status for order ${order.id}`}
+                            title={`Current status: ${order.status.replace('_', ' ')}`}
+                          >
+                            <option value="PENDING">Pending</option>
+                            <option value="CONFIRMED">Confirmed</option>
+                            <option value="PREPARING">Preparing</option>
+                            <option value="READY">Ready</option>
+                            <option value="OUT_FOR_DELIVERY">Out for Delivery</option>
+                            <option value="DELIVERED">Delivered</option>
+                            <option value="CANCELLED">Cancelled</option>
+                          </select>
+                          <div className="absolute inset-y-0 left-2 flex items-center pointer-events-none">
+                            {updatingOrderId === order.id ? (
+                              <div className="animate-spin rounded-full h-3 w-3 border-b border-current"></div>
+                            ) : (
+                              getStatusIcon(order.status)
+                            )}
+                          </div>
+                        </div>
                       </td>
 
                       <td className="py-4 px-6">
                         <span className="font-semibold text-neutral-800">
-                          {formatCurrency(order.total)}
+                          {formatCurrency(order.total_amount)}
                         </span>
                       </td>
 

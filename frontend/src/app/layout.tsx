@@ -37,7 +37,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning={true}>
       <head>
         <link rel="preload" href="/videos/shawarma-hero.mp4" as="video" type="video/mp4" />
         <link rel="preload" href="/images/elegantRestaurat.jpg" as="image" />

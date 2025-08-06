@@ -15,6 +15,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from database import db, User, Order, OrderItem, MenuItem, Category, Payment, AdminSession
 from sqlalchemy import func, desc
 from sqlalchemy.orm import joinedload
+from email_service import EmailService
 
 # Create admin blueprint
 admin_bp = Blueprint('admin', __name__, url_prefix='/api/admin')
@@ -604,7 +605,7 @@ def get_admin_order_details(current_user, order_id):
 @jwt_required
 @admin_required()
 def update_order_status(current_user, order_id):
-    """Update order status"""
+    """Update order status and send email notification"""
     try:
         data = request.get_json()
 
@@ -617,7 +618,7 @@ def update_order_status(current_user, order_id):
         if new_status not in valid_statuses:
             return jsonify({'error': f'Invalid status. Must be one of: {", ".join(valid_statuses)}'}), 400
 
-        order = Order.query.filter_by(id=order_id).first()
+        order = Order.query.options(joinedload(Order.user)).filter_by(id=order_id).first()
 
         if not order:
             return jsonify({'error': 'Order not found'}), 404
@@ -628,12 +629,50 @@ def update_order_status(current_user, order_id):
 
         db.session.commit()
 
+        # Send email notification to customer
+        email_sent = False
+        try:
+            email_service = EmailService()
+
+            # Prepare order data for email
+            order_data = {
+                'order_id': order.id,
+                'status': new_status,
+                'order_type': order.order_type,
+                'total': float(order.total),
+                'created_at': order.created_at.isoformat() if order.created_at else None,
+                'estimated_delivery_time': order.estimated_delivery_time.isoformat() if order.estimated_delivery_time else None
+            }
+
+            # Prepare customer info
+            if order.user:
+                customer_info = {
+                    'name': order.user.full_name or f"Customer #{order.id[:8]}",
+                    'email': order.user.email,
+                    'phone': order.user.phone or "(555) 123-4567"
+                }
+            else:
+                # Use mock data for orders without user association
+                customer_info = {
+                    'name': f"Customer #{order.id[:8]}",
+                    'email': f"customer{order.id[:8]}@example.com",
+                    'phone': "(555) 123-4567"
+                }
+
+            # Send status update email
+            email_sent = email_service.send_order_status_update(order_data, customer_info, new_status)
+
+        except Exception as email_error:
+            print(f"Failed to send email notification: {email_error}")
+            # Don't fail the status update if email fails
+
         return jsonify({
             'message': f'Order status updated from {old_status} to {new_status}',
             'order_id': order_id,
             'old_status': old_status,
             'new_status': new_status,
-            'updated_at': order.updated_at.isoformat()
+            'updated_at': order.updated_at.isoformat(),
+            'email_sent': email_sent
         })
 
     except Exception as e:
@@ -875,6 +914,138 @@ def get_admin_receipts(current_user):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@admin_bp.route('/reports', methods=['GET'])
+@jwt_required
+@admin_required()
+def get_reports(current_user):
+    """Get comprehensive business reports and analytics"""
+    try:
+        # Time period filter (default to last 30 days)
+        period = request.args.get('period', '30')
+
+        # Calculate date range
+        end_date = datetime.utcnow()
+        if period == '7':
+            start_date = end_date - timedelta(days=7)
+        elif period == '30':
+            start_date = end_date - timedelta(days=30)
+        elif period == '90':
+            start_date = end_date - timedelta(days=90)
+        elif period == '365':
+            start_date = end_date - timedelta(days=365)
+        else:
+            start_date = end_date - timedelta(days=30)
+
+        # Revenue Analytics
+        revenue_query = db.session.query(
+            func.date(Order.created_at).label('date'),
+            func.sum(Order.total).label('daily_revenue'),
+            func.count(Order.id).label('daily_orders')
+        ).filter(
+            Order.created_at >= start_date,
+            Order.status.in_(['DELIVERED', 'READY', 'PREPARING', 'CONFIRMED'])
+        ).group_by(func.date(Order.created_at)).order_by(func.date(Order.created_at))
+
+        revenue_data = revenue_query.all()
+
+        # Order Status Distribution
+        status_query = db.session.query(
+            Order.status,
+            func.count(Order.id).label('count')
+        ).filter(Order.created_at >= start_date).group_by(Order.status)
+
+        status_data = status_query.all()
+
+        # Top Menu Items
+        top_items_query = db.session.query(
+            MenuItem.name,
+            func.sum(OrderItem.quantity).label('total_sold'),
+            func.sum(OrderItem.total_price).label('total_revenue')
+        ).join(OrderItem).join(Order).filter(
+            Order.created_at >= start_date,
+            Order.status.in_(['DELIVERED', 'READY', 'PREPARING', 'CONFIRMED'])
+        ).group_by(MenuItem.id, MenuItem.name).order_by(
+            func.sum(OrderItem.quantity).desc()
+        ).limit(10)
+
+        top_items_data = top_items_query.all()
+
+        # Order Type Distribution
+        order_type_query = db.session.query(
+            Order.order_type,
+            func.count(Order.id).label('count')
+        ).filter(Order.created_at >= start_date).group_by(Order.order_type)
+
+        order_type_data = order_type_query.all()
+
+        # Summary Statistics
+        total_revenue = db.session.query(func.sum(Order.total)).filter(
+            Order.created_at >= start_date,
+            Order.status.in_(['DELIVERED', 'READY', 'PREPARING', 'CONFIRMED'])
+        ).scalar() or 0
+
+        total_orders = db.session.query(func.count(Order.id)).filter(
+            Order.created_at >= start_date
+        ).scalar() or 0
+
+        avg_order_value = (total_revenue / total_orders) if total_orders > 0 else 0
+
+        # Customer Analytics
+        total_customers = db.session.query(func.count(func.distinct(Order.user_id))).filter(
+            Order.created_at >= start_date,
+            Order.user_id.isnot(None)
+        ).scalar() or 0
+
+        # Format response data
+        reports_data = {
+            'period': period,
+            'date_range': {
+                'start': start_date.isoformat(),
+                'end': end_date.isoformat()
+            },
+            'summary': {
+                'total_revenue': float(total_revenue) / 100,
+                'total_orders': total_orders,
+                'avg_order_value': float(avg_order_value) / 100,
+                'total_customers': total_customers
+            },
+            'revenue_chart': [
+                {
+                    'date': item.date.isoformat(),
+                    'revenue': float(item.daily_revenue) / 100,
+                    'orders': item.daily_orders
+                }
+                for item in revenue_data
+            ],
+            'order_status': [
+                {
+                    'status': item.status,
+                    'count': item.count
+                }
+                for item in status_data
+            ],
+            'top_menu_items': [
+                {
+                    'name': item.name,
+                    'quantity_sold': item.total_sold,
+                    'revenue': float(item.total_revenue) / 100
+                }
+                for item in top_items_data
+            ],
+            'order_types': [
+                {
+                    'type': item.order_type,
+                    'count': item.count
+                }
+                for item in order_type_data
+            ]
+        }
+
+        return jsonify(reports_data)
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @admin_bp.route('/receipts/<order_id>/download', methods=['GET'])
 @jwt_required
 @admin_required()
@@ -917,6 +1088,196 @@ def download_receipt(current_user, order_id):
         }
 
         return jsonify(receipt_data)
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@admin_bp.route('/users', methods=['GET'])
+@jwt_required
+@admin_required()
+def get_admin_users(current_user):
+    """Get all admin users"""
+    try:
+        users = User.query.filter_by(is_superuser=True).order_by(User.created_at.desc()).all()
+
+        return jsonify({
+            'admins': [
+                {
+                    'id': user.id,
+                    'full_name': user.full_name,
+                    'email': user.email,
+                    'phone': user.phone,
+                    'is_superuser': user.is_superuser,
+                    'created_at': user.created_at.isoformat() if user.created_at else None,
+                    'last_login': user.last_login.isoformat() if user.last_login else None,
+                    'last_activity': user.last_activity.isoformat() if user.last_activity else None
+                }
+                for user in users
+            ]
+        })
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@admin_bp.route('/users', methods=['POST'])
+@jwt_required
+@admin_required()
+def create_admin_user(current_user):
+    """Create new admin user"""
+    try:
+        data = request.get_json()
+
+        if not data or not data.get('full_name') or not data.get('email') or not data.get('password'):
+            return jsonify({'error': 'Full name, email and password are required'}), 400
+
+        # Check if user already exists
+        existing_user = User.query.filter_by(email=data['email'].lower().strip()).first()
+        if existing_user:
+            return jsonify({'error': 'User with this email already exists'}), 400
+
+        # Create new admin user
+        new_user = User(
+            full_name=data['full_name'],
+            email=data['email'].lower().strip(),
+            phone=data.get('phone'),
+            password=generate_password_hash(data['password']),
+            is_superuser=True,  # All users created through admin are superusers
+            created_at=datetime.utcnow()
+        )
+
+        db.session.add(new_user)
+        db.session.commit()
+
+        return jsonify({
+            'message': 'Admin user created successfully',
+            'id': new_user.id,
+            'name': new_user.full_name,
+            'email': new_user.email
+        }), 201
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@admin_bp.route('/users/<user_id>', methods=['PUT'])
+@jwt_required
+@admin_required()
+def update_admin_user(current_user, user_id):
+    """Update admin user"""
+    try:
+        data = request.get_json()
+
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+
+        user = User.query.filter_by(id=user_id, is_superuser=True).first()
+
+        if not user:
+            return jsonify({'error': 'Admin user not found'}), 404
+
+        # Update fields if provided
+        if 'full_name' in data:
+            user.full_name = data['full_name']
+        if 'email' in data:
+            # Check if email is already taken by another user
+            existing_user = User.query.filter(
+                User.email == data['email'].lower().strip(),
+                User.id != user_id
+            ).first()
+            if existing_user:
+                return jsonify({'error': 'Email already taken by another user'}), 400
+            user.email = data['email'].lower().strip()
+        if 'phone' in data:
+            user.phone = data['phone']
+
+        db.session.commit()
+
+        return jsonify({
+            'message': 'Admin user updated successfully',
+            'id': user.id,
+            'name': user.full_name,
+            'email': user.email
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@admin_bp.route('/users/<user_id>', methods=['DELETE'])
+@jwt_required
+@admin_required()
+def delete_admin_user(current_user, user_id):
+    """Delete admin user"""
+    try:
+        # Prevent self-deletion
+        if current_user.id == user_id:
+            return jsonify({'error': 'Cannot delete your own account'}), 400
+
+        user = User.query.filter_by(id=user_id, is_superuser=True).first()
+
+        if not user:
+            return jsonify({'error': 'Admin user not found'}), 404
+
+        user_name = user.full_name
+
+        # Revoke all sessions for the user before deletion
+        revoke_all_user_sessions(user_id)
+
+        # Delete the user
+        db.session.delete(user)
+        db.session.commit()
+
+        return jsonify({
+            'message': f'Admin user "{user_name}" has been deleted',
+            'id': user_id
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@admin_bp.route('/upload', methods=['POST'])
+@jwt_required
+@admin_required()
+def upload_image(current_user):
+    """Upload image for menu items"""
+    try:
+        if 'image' not in request.files:
+            return jsonify({'error': 'No image file provided'}), 400
+
+        file = request.files['image']
+        if file.filename == '':
+            return jsonify({'error': 'No file selected'}), 400
+
+        # Check file type
+        allowed_extensions = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+        if not file.filename or '.' not in file.filename:
+            return jsonify({'error': 'Invalid file type'}), 400
+
+        extension = file.filename.rsplit('.', 1)[1].lower()
+        if extension not in allowed_extensions:
+            return jsonify({'error': 'Invalid file type. Allowed: png, jpg, jpeg, gif, webp'}), 400
+
+        # Create uploads directory if it doesn't exist
+        upload_dir = os.path.join(current_app.root_path, 'static', 'uploads', 'menu')
+        os.makedirs(upload_dir, exist_ok=True)
+
+        # Generate unique filename
+        import uuid
+        filename = f"{uuid.uuid4()}.{extension}"
+        file_path = os.path.join(upload_dir, filename)
+
+        # Save file
+        file.save(file_path)
+
+        # Return the URL path
+        file_url = f"/static/uploads/menu/{filename}"
+
+        return jsonify({
+            'message': 'Image uploaded successfully',
+            'url': file_url,
+            'filename': filename
+        })
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500

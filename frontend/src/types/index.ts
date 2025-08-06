@@ -97,7 +97,7 @@ export interface Order {
   subtotal: number
   tax: number
   tip: number
-  total: number
+  total_amount: number
   created_at: string
   estimated_delivery_time?: string
   special_instructions?: string

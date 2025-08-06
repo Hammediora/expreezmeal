@@ -1,12 +1,28 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
-import { Plus, Search, Edit2, Trash2, Eye, EyeOff, Star, Clock, X, Save } from 'lucide-react'
+import {
+  Plus,
+  Search,
+  Edit2,
+  Trash2,
+  Eye,
+  EyeOff,
+  Star,
+  Clock,
+  X,
+  Save,
+  Upload,
+  Image as ImageIcon,
+  Check,
+  AlertTriangle,
+} from 'lucide-react'
 import AdminLayout from '@/components/admin/AdminLayout'
 import ProtectedRoute from '@/components/admin/ProtectedRoute'
-import { adminApiClient, apiClient, formatCurrency, handleApiError } from '@/lib/api'
+import { adminApiClient } from '@/lib/adminApi'
+import { formatCurrency, handleApiError } from '@/lib/api'
 import { MenuItem, Category } from '@/types'
 
 interface MenuItemFormData {
@@ -29,10 +45,12 @@ const AdminMenu: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [successMessage, setSuccessMessage] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string>('')
   const [showAddForm, setShowAddForm] = useState(false)
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null)
+  const [uploadingImage, setUploadingImage] = useState(false)
   const [formData, setFormData] = useState<MenuItemFormData>({
     category_id: '',
     name: '',
@@ -48,49 +66,108 @@ const AdminMenu: React.FC = () => {
     dietary_flags: [],
   })
 
-  useEffect(() => {
-    fetchData()
-  }, [])
-
-  const fetchData = async () => {
+  const fetchMenuItems = useCallback(async () => {
     try {
       setLoading(true)
-      // Use public API for reading data, admin API for create/update/delete operations
-      const [itemsData, categoriesData] = await Promise.all([
-        apiClient.getMenuItems(), // Use public API for reading
-        apiClient.getCategories(), // Use public API for reading
-      ])
-      setMenuItems(itemsData)
-      setCategories(categoriesData)
+      setError('')
+      const items = await adminApiClient.getMenuItems()
+      setMenuItems(items)
     } catch (err: unknown) {
       setError(handleApiError(err))
+      console.error('Failed to fetch menu items:', err)
     } finally {
       setLoading(false)
+    }
+  }, [])
+
+  const fetchCategories = useCallback(async () => {
+    try {
+      const categoriesData = await adminApiClient.getCategories()
+      setCategories(categoriesData)
+    } catch (err: unknown) {
+      console.error('Failed to fetch categories:', err)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchMenuItems()
+    fetchCategories()
+  }, [fetchMenuItems, fetchCategories])
+
+  const handleImageUpload = async (file: File) => {
+    if (!file) return
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
+    if (!allowedTypes.includes(file.type)) {
+      setError('Please select a valid image file (JPEG, PNG, GIF, or WebP)')
+      return
+    }
+
+    // Validate file size (max 5MB)
+    const maxSize = 5 * 1024 * 1024
+    if (file.size > maxSize) {
+      setError('Image file size must be less than 5MB')
+      return
+    }
+
+    try {
+      setUploadingImage(true)
+      setError('')
+
+      const result = await adminApiClient.uploadImage(file)
+      setFormData({ ...formData, image_url: result.url })
+      setSuccessMessage('Image uploaded successfully!')
+
+      setTimeout(() => setSuccessMessage(''), 3000)
+    } catch (err: unknown) {
+      setError(handleApiError(err))
+      console.error('Failed to upload image:', err)
+    } finally {
+      setUploadingImage(false)
     }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (!formData.name.trim() || !formData.price) {
+      setError('Name and price are required')
+      return
+    }
+
     try {
+      setError('')
+
       if (editingItem) {
-        const updatedItem = await adminApiClient.updateMenuItem(editingItem.id, formData)
-        setMenuItems(items => items.map(item => (item.id === editingItem.id ? updatedItem : item)))
+        await adminApiClient.updateMenuItem(editingItem.id, formData)
+        setSuccessMessage('Menu item updated successfully!')
       } else {
-        const newItem = await adminApiClient.createMenuItem(formData)
-        setMenuItems(items => [...items, newItem])
+        await adminApiClient.createMenuItem(formData)
+        setSuccessMessage('Menu item created successfully!')
       }
+
       resetForm()
+      fetchMenuItems()
+
+      setTimeout(() => setSuccessMessage(''), 5000)
     } catch (err: unknown) {
       setError(handleApiError(err))
     }
   }
 
-  const handleDelete = async (itemId: string) => {
-    if (!confirm('Are you sure you want to delete this menu item?')) return
+  const handleDelete = async (itemId: string, itemName: string) => {
+    if (!confirm(`Are you sure you want to delete "${itemName}"? This action cannot be undone.`)) {
+      return
+    }
 
     try {
+      setError('')
       await adminApiClient.deleteMenuItem(itemId)
-      setMenuItems(items => items.filter(item => item.id !== itemId))
+      setSuccessMessage('Menu item deleted successfully!')
+      fetchMenuItems()
+
+      setTimeout(() => setSuccessMessage(''), 5000)
     } catch (err: unknown) {
       setError(handleApiError(err))
     }
@@ -99,9 +176,9 @@ const AdminMenu: React.FC = () => {
   const handleEdit = (item: MenuItem) => {
     setEditingItem(item)
     setFormData({
-      category_id: item.category_id,
+      category_id: item.category_id || '',
       name: item.name,
-      description: item.description,
+      description: item.description || '',
       price: item.price,
       sale_price: item.sale_price,
       image_url: item.image_url || '',
@@ -137,18 +214,18 @@ const AdminMenu: React.FC = () => {
   const filteredItems = menuItems.filter(item => {
     const matchesSearch =
       item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.description.toLowerCase().includes(searchTerm.toLowerCase())
+      (item.description && item.description.toLowerCase().includes(searchTerm.toLowerCase()))
     const matchesCategory = !selectedCategory || item.category_id === selectedCategory
     return matchesSearch && matchesCategory
   })
 
   if (loading) {
     return (
-      <AdminLayout title="Menu Management" subtitle="Manage your restaurant menu">
+      <AdminLayout title="Menu Management" subtitle="Manage menu items and categories">
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-secondary-600 mx-auto mb-4"></div>
-            <p className="text-neutral-600">Loading menu...</p>
+            <p className="text-neutral-600">Loading menu items...</p>
           </div>
         </div>
       </AdminLayout>
@@ -159,40 +236,58 @@ const AdminMenu: React.FC = () => {
     <ProtectedRoute>
       <AdminLayout
         title="Menu Management"
-        subtitle="Manage your restaurant menu items, categories, and pricing"
+        subtitle={`Manage menu items and categories • ${filteredItems.length} items`}
       >
         <div className="space-y-6">
-          {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-              <p className="text-red-700">{error}</p>
-              <button
-                onClick={() => setError('')}
-                className="mt-2 text-sm text-red-600 hover:text-red-800"
-              >
-                Dismiss
-              </button>
-            </div>
+          {/* Success Message */}
+          {successMessage && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-green-50 border border-green-200 rounded-lg p-4"
+            >
+              <div className="flex items-center">
+                <Check className="w-5 h-5 text-green-600 mr-2" />
+                <p className="text-green-600 font-medium">{successMessage}</p>
+              </div>
+            </motion.div>
           )}
 
-          {/* Filters and Actions */}
+          {/* Error Display */}
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-red-50 border border-red-200 rounded-lg p-4"
+            >
+              <div className="flex items-center">
+                <AlertTriangle className="w-5 h-5 text-red-600 mr-2" />
+                <p className="text-red-600 font-medium">{error}</p>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Header Controls */}
           <div className="bg-white rounded-xl shadow-sm border border-neutral-200 p-6">
-            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-              <div className="flex flex-col sm:flex-row gap-4 flex-1">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+              <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+                {/* Search */}
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400 w-4 h-4" />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
                   <input
                     type="text"
                     placeholder="Search menu items..."
                     value={searchTerm}
                     onChange={e => setSearchTerm(e.target.value)}
-                    className="pl-10 pr-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-secondary-500 focus:border-transparent w-full sm:w-64"
+                    className="pl-10 pr-4 py-2.5 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary-500 focus:border-transparent"
                   />
                 </div>
 
+                {/* Category Filter */}
                 <select
                   value={selectedCategory}
                   onChange={e => setSelectedCategory(e.target.value)}
-                  className="px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-secondary-500 focus:border-transparent"
+                  className="border border-neutral-300 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-secondary-500 focus:border-transparent"
                   aria-label="Filter by category"
                 >
                   <option value="">All Categories</option>
@@ -206,7 +301,7 @@ const AdminMenu: React.FC = () => {
 
               <button
                 onClick={() => setShowAddForm(true)}
-                className="flex items-center space-x-2 bg-secondary-600 text-white px-4 py-2 rounded-lg hover:bg-secondary-700 transition-colors"
+                className="flex items-center space-x-2 px-4 py-2.5 bg-secondary-600 text-white rounded-lg hover:bg-secondary-700 transition-colors"
               >
                 <Plus className="w-4 h-4" />
                 <span>Add Menu Item</span>
@@ -215,94 +310,111 @@ const AdminMenu: React.FC = () => {
           </div>
 
           {/* Menu Items Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredItems.map((item, index) => (
               <motion.div
                 key={item.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className="bg-white rounded-xl shadow-sm border border-neutral-200 overflow-hidden hover:shadow-md transition-shadow"
+                transition={{ delay: index * 0.05 }}
+                className="bg-white rounded-xl shadow-sm border border-neutral-200 overflow-hidden"
               >
-                {item.image_url && (
-                  <div className="aspect-video relative">
-                    <Image
-                      src={item.image_url}
-                      alt={item.name}
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    />
+                {/* Image */}
+                <div className="relative h-48 bg-neutral-100">
+                  {item.image_url ? (
+                    <Image src={item.image_url} alt={item.name} fill className="object-cover" />
+                  ) : (
+                    <div className="flex items-center justify-center h-full">
+                      <ImageIcon className="w-12 h-12 text-neutral-400" />
+                    </div>
+                  )}
+
+                  {/* Status badges */}
+                  <div className="absolute top-2 left-2 flex space-x-1">
                     {item.is_featured && (
-                      <div className="absolute top-2 left-2 bg-secondary-500 text-white px-2 py-1 rounded-full text-xs font-medium flex items-center space-x-1">
-                        <Star className="w-3 h-3" />
-                        <span>Featured</span>
-                      </div>
+                      <span className="inline-flex items-center px-2 py-1 rounded-full bg-yellow-100 text-yellow-800 text-xs font-medium">
+                        <Star className="w-3 h-3 mr-1" />
+                        Featured
+                      </span>
                     )}
                     {!item.is_available && (
-                      <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                        <span className="text-white font-semibold">Unavailable</span>
-                      </div>
+                      <span className="inline-flex items-center px-2 py-1 rounded-full bg-red-100 text-red-800 text-xs font-medium">
+                        <EyeOff className="w-3 h-3 mr-1" />
+                        Hidden
+                      </span>
                     )}
                   </div>
-                )}
 
+                  {/* Action buttons */}
+                  <div className="absolute top-2 right-2 flex space-x-1">
+                    <button
+                      onClick={() => handleEdit(item)}
+                      className="p-2 bg-white rounded-full shadow-md hover:bg-neutral-50 transition-colors"
+                      aria-label="Edit item"
+                    >
+                      <Edit2 className="w-4 h-4 text-neutral-600" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(item.id, item.name)}
+                      className="p-2 bg-white rounded-full shadow-md hover:bg-red-50 transition-colors"
+                      aria-label="Delete item"
+                    >
+                      <Trash2 className="w-4 h-4 text-red-600" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Content */}
                 <div className="p-4">
                   <div className="flex items-start justify-between mb-2">
                     <h3 className="font-semibold text-neutral-800 line-clamp-1">{item.name}</h3>
                     <div className="flex items-center space-x-1">
                       {item.is_available ? (
-                        <Eye className="w-4 h-4 text-green-500" />
+                        <Eye className="w-4 h-4 text-green-600" />
                       ) : (
-                        <EyeOff className="w-4 h-4 text-red-500" />
+                        <EyeOff className="w-4 h-4 text-red-600" />
                       )}
                     </div>
                   </div>
 
-                  <p className="text-sm text-neutral-600 mb-3 line-clamp-2">{item.description}</p>
+                  {item.description && (
+                    <p className="text-sm text-neutral-600 mb-3 line-clamp-2">{item.description}</p>
+                  )}
 
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center space-x-2">
-                      <span className="font-semibold text-lg text-neutral-800">
-                        {formatCurrency(item.price)}
-                      </span>
-                      {item.sale_price && (
-                        <span className="text-sm text-red-500 line-through">
-                          {formatCurrency(item.sale_price)}
+                      {item.sale_price ? (
+                        <>
+                          <span className="text-lg font-bold text-secondary-600">
+                            {formatCurrency(item.sale_price)}
+                          </span>
+                          <span className="text-sm text-neutral-500 line-through">
+                            {formatCurrency(item.price)}
+                          </span>
+                        </>
+                      ) : (
+                        <span className="text-lg font-bold text-neutral-800">
+                          {formatCurrency(item.price)}
                         </span>
                       )}
                     </div>
+
                     {item.preparation_time && (
-                      <div className="flex items-center space-x-1 text-xs text-neutral-500">
-                        <Clock className="w-3 h-3" />
-                        <span>{item.preparation_time}min</span>
+                      <div className="flex items-center text-xs text-neutral-500">
+                        <Clock className="w-3 h-3 mr-1" />
+                        {item.preparation_time}m
                       </div>
                     )}
                   </div>
 
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-neutral-500">
-                      {categories.find(c => c.id === item.category_id)?.name}
-                    </span>
-                    <div className="flex items-center space-x-2">
-                      <button
-                        onClick={() => handleEdit(item)}
-                        className="p-1 text-neutral-400 hover:text-blue-600 transition-colors"
-                        title="Edit menu item"
-                        aria-label="Edit menu item"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(item.id)}
-                        className="p-1 text-neutral-400 hover:text-red-600 transition-colors"
-                        title="Delete menu item"
-                        aria-label="Delete menu item"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
+                  {(() => {
+                    const category = categories.find(cat => cat.id === item.category_id)
+                    return category && (
+                      <span className="inline-block px-2 py-1 bg-neutral-100 text-neutral-700 text-xs rounded-full">
+                        {category.name}
+                      </span>
+                    )
+                  })()}
                 </div>
               </motion.div>
             ))}
@@ -310,216 +422,278 @@ const AdminMenu: React.FC = () => {
 
           {filteredItems.length === 0 && (
             <div className="text-center py-12">
-              <div className="w-16 h-16 bg-neutral-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Search className="w-8 h-8 text-neutral-400" />
-              </div>
-              <h3 className="text-lg font-medium text-neutral-800 mb-2">No menu items found</h3>
-              <p className="text-neutral-600">
+              <ImageIcon className="w-16 h-16 text-neutral-300 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-neutral-800 mb-2">No menu items found</h3>
+              <p className="text-neutral-600 mb-4">
                 {searchTerm || selectedCategory
-                  ? 'Try adjusting your search or filter criteria'
-                  : 'Get started by adding your first menu item'}
+                  ? 'Try adjusting your search or filter criteria.'
+                  : 'Create your first menu item to get started.'}
               </p>
+              <button
+                onClick={() => setShowAddForm(true)}
+                className="px-4 py-2 bg-secondary-600 text-white rounded-lg hover:bg-secondary-700 transition-colors"
+              >
+                Add Menu Item
+              </button>
+            </div>
+          )}
+
+          {/* Add/Edit Modal */}
+          {showAddForm && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+              >
+                <div className="p-6 border-b border-neutral-200">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold text-neutral-800">
+                      {editingItem ? 'Edit Menu Item' : 'Add New Menu Item'}
+                    </h3>
+                    <button
+                      onClick={resetForm}
+                      className="p-2 rounded-lg hover:bg-neutral-100 transition-colors"
+                      aria-label="Close form"
+                      title="Close form"
+                    >
+                      <X className="w-5 h-5 text-neutral-600" />
+                    </button>
+                  </div>
+                </div>
+
+                <form onSubmit={handleSubmit} className="p-6 space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Name */}
+                    <div>
+                      <label className="block text-sm font-medium text-neutral-700 mb-2">
+                        Name *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={formData.name}
+                        onChange={e => setFormData({ ...formData, name: e.target.value })}
+                        className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary-500 focus:border-transparent"
+                        placeholder="Enter item name"
+                      />
+                    </div>
+
+                    {/* Category */}
+                    <div>
+                      <label className="block text-sm font-medium text-neutral-700 mb-2">
+                        Category
+                      </label>
+                      <select
+                        value={formData.category_id}
+                        onChange={e => setFormData({ ...formData, category_id: e.target.value })}
+                        className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary-500 focus:border-transparent"
+                        aria-label="Select category"
+                      >
+                        <option value="">Select Category</option>
+                        {categories.map(category => (
+                          <option key={category.id} value={category.id}>
+                            {category.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Price */}
+                    <div>
+                      <label className="block text-sm font-medium text-neutral-700 mb-2">
+                        Price *
+                      </label>
+                      <input
+                        type="number"
+                        required
+                        min="0"
+                        step="0.01"
+                        value={formData.price}
+                        onChange={e =>
+                          setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })
+                        }
+                        className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary-500 focus:border-transparent"
+                        placeholder="0.00"
+                      />
+                    </div>
+
+                    {/* Sale Price */}
+                    <div>
+                      <label className="block text-sm font-medium text-neutral-700 mb-2">
+                        Sale Price
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={formData.sale_price || ''}
+                        onChange={e =>
+                          setFormData({
+                            ...formData,
+                            sale_price: e.target.value ? parseFloat(e.target.value) : undefined,
+                          })
+                        }
+                        className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary-500 focus:border-transparent"
+                        placeholder="0.00"
+                      />
+                    </div>
+
+                    {/* Preparation Time */}
+                    <div>
+                      <label className="block text-sm font-medium text-neutral-700 mb-2">
+                        Prep Time (minutes)
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={formData.preparation_time || ''}
+                        onChange={e =>
+                          setFormData({
+                            ...formData,
+                            preparation_time: e.target.value ? parseInt(e.target.value) : undefined,
+                          })
+                        }
+                        className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary-500 focus:border-transparent"
+                        placeholder="15"
+                      />
+                    </div>
+
+                    {/* Calories */}
+                    <div>
+                      <label className="block text-sm font-medium text-neutral-700 mb-2">
+                        Calories
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={formData.calories || ''}
+                        onChange={e =>
+                          setFormData({
+                            ...formData,
+                            calories: e.target.value ? parseInt(e.target.value) : undefined,
+                          })
+                        }
+                        className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary-500 focus:border-transparent"
+                        placeholder="250"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Description */}
+                  <div>
+                    <label className="block text-sm font-medium text-neutral-700 mb-2">
+                      Description
+                    </label>
+                    <textarea
+                      value={formData.description}
+                      onChange={e => setFormData({ ...formData, description: e.target.value })}
+                      rows={3}
+                      className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary-500 focus:border-transparent"
+                      placeholder="Enter item description"
+                    />
+                  </div>
+
+                  {/* Image Upload */}
+                  <div>
+                    <label className="block text-sm font-medium text-neutral-700 mb-2">Image</label>
+                    <div className="space-y-4">
+                      {formData.image_url && (
+                        <div className="relative w-32 h-32 rounded-lg overflow-hidden">
+                          <Image
+                            src={formData.image_url}
+                            alt="Preview"
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                      )}
+
+                      <div className="flex items-center space-x-4">
+                        <label className="cursor-pointer">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={e => {
+                              const file = e.target.files?.[0]
+                              if (file) handleImageUpload(file)
+                            }}
+                            className="hidden"
+                          />
+                          <div className="flex items-center space-x-2 px-4 py-2 border border-neutral-300 rounded-lg hover:bg-neutral-50 transition-colors">
+                            <Upload className="w-4 h-4" />
+                            <span>{uploadingImage ? 'Uploading...' : 'Upload Image'}</span>
+                          </div>
+                        </label>
+
+                        {formData.image_url && (
+                          <button
+                            type="button"
+                            onClick={() => setFormData({ ...formData, image_url: '' })}
+                            className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          >
+                            Remove
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Switches */}
+                  <div className="grid grid-cols-2 gap-6">
+                    <div className="flex items-center space-x-3">
+                      <input
+                        type="checkbox"
+                        id="is_available"
+                        checked={formData.is_available}
+                        onChange={e => setFormData({ ...formData, is_available: e.target.checked })}
+                        className="w-4 h-4 text-secondary-600 focus:ring-secondary-500 border-neutral-300 rounded"
+                      />
+                      <label
+                        htmlFor="is_available"
+                        className="text-sm font-medium text-neutral-700"
+                      >
+                        Available for ordering
+                      </label>
+                    </div>
+
+                    <div className="flex items-center space-x-3">
+                      <input
+                        type="checkbox"
+                        id="is_featured"
+                        checked={formData.is_featured}
+                        onChange={e => setFormData({ ...formData, is_featured: e.target.checked })}
+                        className="w-4 h-4 text-secondary-600 focus:ring-secondary-500 border-neutral-300 rounded"
+                      />
+                      <label htmlFor="is_featured" className="text-sm font-medium text-neutral-700">
+                        Featured item
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Submit Buttons */}
+                  <div className="flex items-center space-x-3 pt-4">
+                    <button
+                      type="submit"
+                      disabled={uploadingImage}
+                      className="flex-1 flex items-center justify-center space-x-2 px-4 py-2 bg-secondary-600 text-white rounded-lg hover:bg-secondary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Save className="w-4 h-4" />
+                      <span>{editingItem ? 'Update Item' : 'Create Item'}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={resetForm}
+                      className="px-4 py-2 border border-neutral-300 rounded-lg hover:bg-neutral-50 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              </motion.div>
             </div>
           )}
         </div>
-
-        {/* Add/Edit Form Modal */}
-        {showAddForm && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-xl max-w-2xl w-full max-h-screen overflow-y-auto">
-              <div className="p-6 border-b border-neutral-200">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-neutral-800">
-                    {editingItem ? 'Edit Menu Item' : 'Add Menu Item'}
-                  </h3>
-                  <button
-                    onClick={resetForm}
-                    className="p-1 text-neutral-400 hover:text-neutral-600"
-                    title="Close modal"
-                    aria-label="Close modal"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-              </div>
-
-              <form onSubmit={handleSubmit} className="p-6 space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-neutral-700 mb-2">
-                      Name *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.name}
-                      onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                      className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-secondary-500 focus:border-transparent"
-                      placeholder="Enter menu item name"
-                      title="Menu item name"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-neutral-700 mb-2">
-                      Category *
-                    </label>
-                    <select
-                      required
-                      value={formData.category_id}
-                      onChange={e =>
-                        setFormData(prev => ({ ...prev, category_id: e.target.value }))
-                      }
-                      className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-secondary-500 focus:border-transparent"
-                      title="Select category"
-                      aria-label="Select category"
-                    >
-                      <option value="">Select Category</option>
-                      {categories.map(category => (
-                        <option key={category.id} value={category.id}>
-                          {category.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-2">
-                    Description
-                  </label>
-                  <textarea
-                    value={formData.description}
-                    onChange={e => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                    rows={3}
-                    className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-secondary-500 focus:border-transparent"
-                    placeholder="Enter menu item description"
-                    title="Menu item description"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-neutral-700 mb-2">
-                      Price *
-                    </label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      required
-                      value={formData.price}
-                      onChange={e =>
-                        setFormData(prev => ({ ...prev, price: parseFloat(e.target.value) || 0 }))
-                      }
-                      className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-secondary-500 focus:border-transparent"
-                      placeholder="0.00"
-                      title="Menu item price"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-neutral-700 mb-2">
-                      Sale Price
-                    </label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={formData.sale_price || ''}
-                      onChange={e =>
-                        setFormData(prev => ({
-                          ...prev,
-                          sale_price: e.target.value ? parseFloat(e.target.value) : undefined,
-                        }))
-                      }
-                      className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-secondary-500 focus:border-transparent"
-                      placeholder="0.00"
-                      title="Sale price (optional)"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-neutral-700 mb-2">
-                      Prep Time (min)
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      value={formData.preparation_time || ''}
-                      onChange={e =>
-                        setFormData(prev => ({
-                          ...prev,
-                          preparation_time: e.target.value ? parseInt(e.target.value) : undefined,
-                        }))
-                      }
-                      className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-secondary-500 focus:border-transparent"
-                      placeholder="15"
-                      title="Preparation time in minutes"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-2">
-                    Image URL
-                  </label>
-                  <input
-                    type="url"
-                    value={formData.image_url}
-                    onChange={e => setFormData(prev => ({ ...prev, image_url: e.target.value }))}
-                    className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-secondary-500 focus:border-transparent"
-                    placeholder="https://example.com/image.jpg"
-                    title="Image URL (optional)"
-                  />
-                </div>
-
-                <div className="flex items-center space-x-6">
-                  <label className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      checked={formData.is_available}
-                      onChange={e =>
-                        setFormData(prev => ({ ...prev, is_available: e.target.checked }))
-                      }
-                      className="rounded border-neutral-300 text-secondary-600 focus:ring-secondary-500"
-                    />
-                    <span className="text-sm text-neutral-700">Available</span>
-                  </label>
-
-                  <label className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      checked={formData.is_featured}
-                      onChange={e =>
-                        setFormData(prev => ({ ...prev, is_featured: e.target.checked }))
-                      }
-                      className="rounded border-neutral-300 text-secondary-600 focus:ring-secondary-500"
-                    />
-                    <span className="text-sm text-neutral-700">Featured</span>
-                  </label>
-                </div>
-
-                <div className="flex items-center justify-end space-x-4 pt-4 border-t border-neutral-200">
-                  <button
-                    type="button"
-                    onClick={resetForm}
-                    className="px-4 py-2 text-neutral-600 hover:text-neutral-800 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="flex items-center space-x-2 bg-secondary-600 text-white px-6 py-2 rounded-lg hover:bg-secondary-700 transition-colors"
-                  >
-                    <Save className="w-4 h-4" />
-                    <span>{editingItem ? 'Update' : 'Create'}</span>
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
       </AdminLayout>
     </ProtectedRoute>
   )
