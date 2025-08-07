@@ -14,8 +14,7 @@ services:
       - SECRET_KEY=${SECRET_KEY}
       - EMAIL_SENDER=${EMAIL_SENDER}
       - EMAIL_PASSWORD=${EMAIL_PASSWORD}
-    networks:
-      - app-network
+    
     restart: unless-stopped
 
   frontend:
@@ -30,8 +29,7 @@ services:
       - NODE_ENV=production
     depends_on:
       - backend
-    networks:
-      - app-network
+    
     restart: unless-stopped
 
   nginx:
@@ -46,13 +44,10 @@ services:
     depends_on:
       - frontend
       - backend
-    networks:
-      - app-network
+    
     restart: unless-stopped
 
-networks:
-  app-network:
-    driver: bridge
+
 
 volumes:
   postgres_data:
