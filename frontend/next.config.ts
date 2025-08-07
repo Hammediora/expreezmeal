@@ -1,25 +1,29 @@
 import type { NextConfig } from "next";
+import path from "path";
 
 const nextConfig: NextConfig = {
-  output: 'standalone',
+  output: "standalone",
 
-  experimental: {
-  },
+  experimental: {},
 
   images: {
     remotePatterns: [
       {
-        protocol: 'http',
-        hostname: '**', // allow all http domains (development only)
+        protocol: "http",
+        hostname: "**",
       },
       {
-        protocol: 'https',
-        hostname: '**', // allow all https domains (development only)
+        protocol: "https",
+        hostname: "**",
       },
     ],
-    // Optional fallback config to avoid console warnings
-    dangerouslyAllowSVG: true, // only if you plan to load SVGs
+    dangerouslyAllowSVG: true,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+  },
+  
+  webpack: (config) => {
+    config.resolve.alias["@"] = path.resolve(__dirname, "src");
+    return config;
   },
 };
 
