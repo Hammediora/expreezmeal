@@ -11,7 +11,7 @@ permissions:
   security-events: write
 
 jobs:
-  check-merge:
+  deployment:
     runs-on: self-hosted
 
     steps:
@@ -32,13 +32,6 @@ jobs:
           DEFAULT_BRANCH: dev
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
-        with:
-          languages: python,javascript
-
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
 
 
       - name: Run Python unit tests

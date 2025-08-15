@@ -1,11 +1,13 @@
 
 # ExpreeZmeal - Nigerian Fast-Casual Restaurant
 
+
 <!-- CI/CD & DevSecOps Badges -->
-![CI/CD](https://github.com/expreez-meal/expreezmeal/actions/workflows/docker-compose-on-merge.yml/badge.svg)
-![Lint](https://github.com/expreez-meal/expreezmeal/workflows/Super-Linter/badge.svg)
-![CodeQL](https://github.com/expreez-meal/expreezmeal/workflows/CodeQL/badge.svg)
-![Unit Tests](https://github.com/expreez-meal/expreezmeal/workflows/Unit%20Tests/badge.svg)
+<p align="left">
+   <img alt="CI/CD" src="https://github.com/expreez-meal/expreezmeal/actions/workflows/docker-compose-on-merge.yml/badge.svg" />
+   <img alt="Lint" src="https://github.com/expreez-meal/expreezmeal/workflows/Super-Linter/badge.svg" />
+   <img alt="Unit Tests" src="https://github.com/expreez-meal/expreezmeal/workflows/Unit%20Tests/badge.svg" />
+</p>
 
 A modern full-stack web application for ExpreeZmeal, a luxurious Nigerian fast-casual restaurant offering shawarma, zobo, meat pies, and authentic local snacks.
 
