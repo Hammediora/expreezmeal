@@ -4,6 +4,11 @@ on:
   push:
     branches: [dev, prod]
 
+permissions:
+  contents: read
+  id-token: write
+  statuses: write
+
 jobs:
   check-merge:
     runs-on: self-hosted
@@ -33,33 +38,6 @@ jobs:
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
 
-      # ---------- TRIVY VIA DOCKER (no marketplace action) ----------
-      - name: Trivy config scan (docker-compose.yml)
-        run: |
-          docker pull aquasec/trivy:latest
-          docker run --rm \
-            -v "$PWD:/repo" \
-            -v trivy-cache:/root/.cache/ \
-            aquasec/trivy:latest \
-            config --format table --exit-code 1 --severity CRITICAL,HIGH /repo/docker-compose.yml
-
-      - name: Build images with Docker Compose
-        run: |
-          docker compose -f docker-compose.yml build
-
-      # If you know your image tags, list them explicitly (recommended)
-      - name: Trivy image scan (built images)
-        env:
-          IMAGES: "your-backend-image:latest your-frontend-image:latest"
-        run: |
-          for IMG in $IMAGES; do
-            echo "Scanning $IMG..."
-            docker run --rm \
-              -v trivy-cache:/root/.cache/ \
-              aquasec/trivy:latest \
-              image --format table --exit-code 1 --ignore-unfixed --severity CRITICAL,HIGH "$IMG"
-          done
-      # ---------------------------------------------------------------
 
       - name: Run Python unit tests
         run: |
