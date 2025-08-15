@@ -10,7 +10,7 @@ import redis
 import stripe
 import jwt
 from functools import wraps
-from datetime import datetime
+from datetime import datetime, timezone
 from email_service import email_service
 
 # Load environment variables before using them
@@ -193,7 +193,7 @@ def health_check():
     """Health check endpoint for frontend"""
     return jsonify({
         'status': 'healthy',
-        'timestamp': datetime.utcnow().isoformat()
+        'timestamp': datetime.now(timezone.utc).isoformat()
     })
 
 @app.route('/api/categories')
@@ -431,7 +431,7 @@ def create_order():
 
         for item_data in data['items']:
             # Get menu item
-            menu_item = MenuItem.query.get(item_data['menu_item_id'])
+            menu_item = db.session.get(MenuItem, item_data['menu_item_id'])
             if not menu_item:
                 return jsonify({'error': f'Menu item not found: {item_data["menu_item_id"]}'}), 404
 
@@ -444,7 +444,7 @@ def create_order():
 
             if 'customizations' in item_data:
                 for custom in item_data['customizations']:
-                    option_choice = OptionChoice.query.get(custom['option_choice_id'])
+                    option_choice = db.session.get(OptionChoice, custom['option_choice_id'])
                     if option_choice:
                         customization_cost += int(float(option_choice.price_modifier) * 100)  # Convert dollars to cents
                         customizations_data.append({
@@ -566,7 +566,7 @@ def confirm_payment(order_id):
             return jsonify({'error': 'Payment not successful'}), 400
 
         # Update order and payment status
-        order = Order.query.get(order_id)
+        order = db.session.get(Order, order_id)
         if not order:
             return jsonify({'error': 'Order not found'}), 404
 
@@ -576,7 +576,7 @@ def confirm_payment(order_id):
             payment.transaction_id = payment_intent_id
 
         order.status = 'CONFIRMED'
-        order.updated_at = datetime.utcnow()
+        order.updated_at = datetime.now(timezone.utc)
 
         db.session.commit()
 
@@ -589,12 +589,12 @@ def confirm_payment(order_id):
                 # Prepare order data for email
                 order_items = []
                 for item in order.order_items:
-                    menu_item = MenuItem.query.get(item.menu_item_id)
+                    menu_item = db.session.get(MenuItem, item.menu_item_id)
                     customizations = []
 
                     for custom in item.customizations:
-                        option = CustomizationOption.query.get(custom.customization_option_id)
-                        choice = OptionChoice.query.get(custom.option_choice_id)
+                        option = db.session.get(CustomizationOption, custom.customization_option_id)
+                        choice = db.session.get(OptionChoice, custom.option_choice_id)
                         if option and choice:
                             customizations.append(f"{option.name}: {choice.name}")
 
@@ -620,12 +620,15 @@ def confirm_payment(order_id):
                     'phone': intent.metadata.get('customer_phone', '')
                 }
 
-                # Send confirmation email
-                email_service.send_order_confirmation(order_data, customer_info)
-                print(f"✅ Confirmation email sent to {customer_email} for order {order_id}")
+                # Send confirmation email (now has built-in retry logic)
+                success = email_service.send_order_confirmation(order_data, customer_info)
+                if success:
+                    print(f"✅ Confirmation email sent to {customer_email} for order {order_id}")
+                else:
+                    print(f"❌ Failed to send confirmation email to {customer_email} for order {order_id}")
 
             except Exception as email_error:
-                print(f"❌ Failed to send confirmation email: {email_error}")
+                print(f"❌ Email service error: {email_error}")
                 # Don't fail the payment confirmation if email fails
 
         return jsonify({
@@ -645,7 +648,7 @@ def send_order_confirmation(order_id):
     """Send order confirmation email"""
     try:
         # Get order details
-        order = Order.query.get(order_id)
+        order = db.session.get(Order, order_id)
         if not order:
             return jsonify({'error': 'Order not found'}), 404
 
@@ -660,12 +663,12 @@ def send_order_confirmation(order_id):
         # Prepare order data for email
         order_items = []
         for item in order.order_items:
-            menu_item = MenuItem.query.get(item.menu_item_id)
+            menu_item = db.session.get(MenuItem, item.menu_item_id)
             customizations = []
 
             for custom in item.customizations:
-                option = CustomizationOption.query.get(custom.customization_option_id)
-                choice = OptionChoice.query.get(custom.option_choice_id)
+                option = db.session.get(CustomizationOption, custom.customization_option_id)
+                choice = db.session.get(OptionChoice, custom.option_choice_id)
                 if option and choice:
                     customizations.append(f"{option.name}: {choice.name}")
 
@@ -724,12 +727,12 @@ def update_order_status(order_id):
             return jsonify({'error': f'Invalid status. Must be one of: {valid_statuses}'}), 400
 
         # Update order status
-        order = Order.query.get(order_id)
+        order = db.session.get(Order, order_id)
         if not order:
             return jsonify({'error': 'Order not found'}), 404
 
         order.status = new_status
-        order.updated_at = datetime.utcnow()
+        order.updated_at = datetime.now(timezone.utc)
         db.session.commit()
 
         # Send email notification if customer email is provided
@@ -772,14 +775,14 @@ def notify_new_menu_item():
             return jsonify({'error': 'customer_emails list is required'}), 400
 
         # Get menu item details
-        menu_item = MenuItem.query.get(item_id)
+        menu_item = db.session.get(MenuItem, item_id)
         if not menu_item:
             return jsonify({'error': 'Menu item not found'}), 404
 
         item_data = {
             'name': menu_item.name,
             'description': menu_item.description,
-            'price': int(float(menu_item.price) * 100),  # Convert to cents
+            'price': int(float(menu_item.price) * 100),  # Convert dollars to cents
             'image_url': menu_item.image_url or '/images/menu/default.jpg'
         }
 
@@ -1004,7 +1007,7 @@ def get_contact_inquiries():
 def get_contact_inquiry(inquiry_id):
     """Get a specific contact inquiry (admin only)"""
     try:
-        inquiry = ContactInquiry.query.get(inquiry_id)
+        inquiry = db.session.get(ContactInquiry, inquiry_id)
         if not inquiry:
             return jsonify({'error': 'Inquiry not found'}), 404
 
@@ -1031,14 +1034,14 @@ def update_inquiry_status(inquiry_id):
         if new_status not in ['new', 'in_progress', 'resolved', 'closed']:
             return jsonify({'error': 'Invalid status'}), 400
 
-        inquiry = ContactInquiry.query.get(inquiry_id)
+        inquiry = db.session.get(ContactInquiry, inquiry_id)
         if not inquiry:
             return jsonify({'error': 'Inquiry not found'}), 404
 
         inquiry.status = new_status
         if admin_notes:
             inquiry.admin_notes = admin_notes
-        inquiry.updated_at = datetime.utcnow()
+        inquiry.updated_at = datetime.now(timezone.utc)
 
         db.session.commit()
 

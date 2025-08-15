@@ -1067,8 +1067,8 @@ def download_receipt(current_user, order_id):
             'customer_name': f"Customer #{order.id[:8]}",
             'restaurant_info': {
                 'name': 'ExpreeZmeal',
-                'address': '123 Main Street, New York, NY 10001',
-                'phone': '(555) 123-4567',
+                'address': '123 N Michigan Avenue, Downtown, Chicago, IL 60601',
+                'phone': '(312) 555-0123',
                 'email': 'orders@expreezmeal.com'
             },
             'items': [

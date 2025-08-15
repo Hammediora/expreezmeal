@@ -2,7 +2,16 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { MapPin, Phone, Mail, Clock, Calendar, Users, DollarSign, MessageCircle } from 'lucide-react'
+import {
+  MapPin,
+  Phone,
+  Mail,
+  Clock,
+  Calendar,
+  Users,
+  DollarSign,
+  MessageCircle,
+} from 'lucide-react'
 import { Swiper, SwiperSlide } from 'swiper/react'
 import { Pagination, Autoplay } from 'swiper/modules'
 import 'swiper/css'
@@ -12,6 +21,7 @@ import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import { ContactFormData } from '@/types'
 import { contactApi } from '@/lib/api'
+import { BUSINESS_INFO } from '@/lib/constants'
 
 export default function ContactPage() {
   const [formData, setFormData] = useState<ContactFormData>({
@@ -170,13 +180,12 @@ export default function ContactPage() {
                     <MapPin className="w-6 h-6 sm:w-7 sm:h-7 text-red-600" />
                   </div>
                   <div>
-                    <h3 className="text-lg sm:text-xl font-bold text-neutral-800 mb-2">
-                      Location
-                    </h3>
+                    <h3 className="text-lg sm:text-xl font-bold text-neutral-800 mb-2">Location</h3>
                     <p className="text-sm sm:text-base lg:text-lg text-neutral-600 leading-relaxed">
-                      123 N Michigan Avenue, Downtown
+                      {BUSINESS_INFO.address.street}
                       <br />
-                      Chicago, IL 60601
+                      {BUSINESS_INFO.address.city}, {BUSINESS_INFO.address.state}{' '}
+                      {BUSINESS_INFO.address.zipCode}
                     </p>
                   </div>
                 </div>
@@ -186,21 +195,19 @@ export default function ContactPage() {
                     <Phone className="w-6 h-6 sm:w-7 sm:h-7 text-green-600" />
                   </div>
                   <div>
-                    <h3 className="text-lg sm:text-xl font-bold text-neutral-800 mb-2">
-                      Phone
-                    </h3>
+                    <h3 className="text-lg sm:text-xl font-bold text-neutral-800 mb-2">Phone</h3>
                     <div className="space-y-1">
-                      <a 
-                        href="tel:3125550123" 
+                      <a
+                        href={`tel:${BUSINESS_INFO.contact.phones.main.replace(/[^\d]/g, '')}`}
                         className="block text-sm sm:text-base lg:text-lg text-neutral-600 hover:text-green-600 transition-colors"
                       >
-                        (312) 555-0123
+                        {BUSINESS_INFO.contact.phones.main}
                       </a>
-                      <a 
-                        href="tel:3125550124" 
+                      <a
+                        href={`tel:${BUSINESS_INFO.contact.phones.orders.replace(/[^\d]/g, '')}`}
                         className="block text-sm sm:text-base lg:text-lg text-neutral-600 hover:text-green-600 transition-colors"
                       >
-                        (312) 555-0124
+                        {BUSINESS_INFO.contact.phones.orders}
                       </a>
                     </div>
                   </div>
@@ -211,21 +218,19 @@ export default function ContactPage() {
                     <Mail className="w-6 h-6 sm:w-7 sm:h-7 text-purple-600" />
                   </div>
                   <div>
-                    <h3 className="text-lg sm:text-xl font-bold text-neutral-800 mb-2">
-                      Email
-                    </h3>
+                    <h3 className="text-lg sm:text-xl font-bold text-neutral-800 mb-2">Email</h3>
                     <div className="space-y-1">
-                      <a 
-                        href="mailto:info@expreezmeal.com" 
+                      <a
+                        href={`mailto:${BUSINESS_INFO.contact.emails.info}`}
                         className="block text-sm sm:text-base lg:text-lg text-neutral-600 hover:text-purple-600 transition-colors break-all"
                       >
-                        info@expreezmeal.com
+                        {BUSINESS_INFO.contact.emails.info}
                       </a>
-                      <a 
-                        href="mailto:orders@expreezmeal.com" 
+                      <a
+                        href={`mailto:${BUSINESS_INFO.contact.emails.orders}`}
                         className="block text-sm sm:text-base lg:text-lg text-neutral-600 hover:text-purple-600 transition-colors break-all"
                       >
-                        orders@expreezmeal.com
+                        {BUSINESS_INFO.contact.emails.orders}
                       </a>
                     </div>
                   </div>
@@ -236,15 +241,13 @@ export default function ContactPage() {
                     <Clock className="w-6 h-6 sm:w-7 sm:h-7 text-blue-600" />
                   </div>
                   <div>
-                    <h3 className="text-lg sm:text-xl font-bold text-neutral-800 mb-2">
-                      Hours
-                    </h3>
+                    <h3 className="text-lg sm:text-xl font-bold text-neutral-800 mb-2">Hours</h3>
                     <div className="space-y-1">
                       <p className="text-sm sm:text-base lg:text-lg text-neutral-600">
-                        Monday - Saturday: <span className="font-semibold">11:00 AM - 9:00 PM</span>
+                        {BUSINESS_INFO.hours.weekdays}
                       </p>
                       <p className="text-sm sm:text-base lg:text-lg text-neutral-600">
-                        Sunday: <span className="font-semibold">12:00 PM - 8:00 PM</span>
+                        {BUSINESS_INFO.hours.weekend}
                       </p>
                     </div>
                   </div>
@@ -565,7 +568,8 @@ export default function ContactPage() {
               </h3>
               <p className="text-sm lg:text-base text-neutral-600 leading-relaxed">
                 Planning an event? Let us cater your special occasion with our delicious Nigerian
-                cuisine and exceptional service. Perfect for weddings, corporate events, and celebrations.
+                cuisine and exceptional service. Perfect for weddings, corporate events, and
+                celebrations.
               </p>
             </motion.div>
 
@@ -578,12 +582,10 @@ export default function ContactPage() {
               <div className="bg-gradient-to-br from-blue-100 to-blue-200 w-16 h-16 lg:w-20 lg:h-20 rounded-full flex items-center justify-center mx-auto mb-6">
                 <Phone className="w-8 h-8 lg:w-10 lg:h-10 text-blue-600" />
               </div>
-              <h3 className="text-lg lg:text-xl font-bold text-neutral-800 mb-3">
-                Order Support
-              </h3>
+              <h3 className="text-lg lg:text-xl font-bold text-neutral-800 mb-3">Order Support</h3>
               <p className="text-sm lg:text-base text-neutral-600 leading-relaxed">
-                Need help with your order? Have questions about our menu items or ingredients? Our friendly team
-                is ready to assist you with anything you need.
+                Need help with your order? Have questions about our menu items or ingredients? Our
+                friendly team is ready to assist you with anything you need.
               </p>
             </motion.div>
 
@@ -629,12 +631,11 @@ export default function ContactPage() {
                   <div className="bg-gradient-to-br from-emerald-100 to-emerald-200 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
                     <Users className="w-8 h-8 text-emerald-600" />
                   </div>
-                  <h3 className="text-lg font-bold text-neutral-800 mb-3">
-                    Catering Services
-                  </h3>
+                  <h3 className="text-lg font-bold text-neutral-800 mb-3">Catering Services</h3>
                   <p className="text-sm text-neutral-600 leading-relaxed">
-                    Planning an event? Let us cater your special occasion with our delicious Nigerian
-                    cuisine and exceptional service. Perfect for weddings, corporate events, and celebrations.
+                    Planning an event? Let us cater your special occasion with our delicious
+                    Nigerian cuisine and exceptional service. Perfect for weddings, corporate
+                    events, and celebrations.
                   </p>
                 </motion.div>
               </SwiperSlide>
@@ -649,12 +650,10 @@ export default function ContactPage() {
                   <div className="bg-gradient-to-br from-blue-100 to-blue-200 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
                     <Phone className="w-8 h-8 text-blue-600" />
                   </div>
-                  <h3 className="text-lg font-bold text-neutral-800 mb-3">
-                    Order Support
-                  </h3>
+                  <h3 className="text-lg font-bold text-neutral-800 mb-3">Order Support</h3>
                   <p className="text-sm text-neutral-600 leading-relaxed">
-                    Need help with your order? Have questions about our menu items or ingredients? Our friendly team
-                    is ready to assist you with anything you need.
+                    Need help with your order? Have questions about our menu items or ingredients?
+                    Our friendly team is ready to assist you with anything you need.
                   </p>
                 </motion.div>
               </SwiperSlide>
@@ -673,8 +672,8 @@ export default function ContactPage() {
                     Feedback & Suggestions
                   </h3>
                   <p className="text-sm text-neutral-600 leading-relaxed">
-                    Your opinion matters to us! Share your feedback, suggestions, or let us know about
-                    your dining experience. Help us serve you better.
+                    Your opinion matters to us! Share your feedback, suggestions, or let us know
+                    about your dining experience. Help us serve you better.
                   </p>
                 </motion.div>
               </SwiperSlide>

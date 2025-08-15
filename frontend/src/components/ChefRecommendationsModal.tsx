@@ -22,6 +22,7 @@ import { Swiper, SwiperSlide } from 'swiper/react'
 import { Pagination, Autoplay } from 'swiper/modules'
 import { useCart } from '@/context/CartContext'
 import { MenuItem } from '@/types'
+import { getActiveComboRecommendations, getChefNote } from '@/lib/comboRotation'
 
 // Import Swiper styles
 import 'swiper/css'
@@ -56,98 +57,46 @@ const ChefRecommendationsModal = ({
   const [addingCombo, setAddingCombo] = useState<string | null>(null)
   const [addedCombos, setAddedCombos] = useState<Set<string>>(new Set())
 
-  // Get menu items by name for building combos
-  const getItemByName = (name: string) =>
-    menuItems.find(item => item.name.toLowerCase().includes(name.toLowerCase()))
+  // Get all combo items from the database
+  const allComboItems = menuItems.filter(item => item.dietary_flags?.includes('combo'))
 
-  const shawarma = getItemByName('shawarma')
-  const zobo = getItemByName('zobo')
-  const meatPie = getItemByName('meat pie')
+  // Get today's rotating combo recommendations (only 2 combos)
+  const todaysRecommendations = getActiveComboRecommendations(allComboItems)
 
-  // Define chef's recommendations based on available items
-  const recommendations: RecommendedCombo[] = [
-    {
-      id: 'og-combo',
-      name: 'The OG Combo',
-      description:
-        'Our most popular combo – pure Naija vibes in every bite and sip. A perfect harmony of our signature shawarma with our refreshing zobo.',
-      totalPrice: shawarma && zobo ? shawarma.price + zobo.price : 0,
-      savings: 200, // $2.00 in cents
-      image: '/images/menu/chicken-shawarma.jpg',
-      items: [
-        { name: 'Nigerian Shawarma', customizations: ['Chicken', 'Extra Sauce', 'Hotdog'] },
-        { name: 'Sweetened Zobo', customizations: ['Extra Sweet'] },
-      ],
-    },
-    {
-      id: 'spicy-boost',
-      name: 'Spicy Boost Box',
-      description:
-        'For the real ones who want that fiery kick with a cool-down chaser. Experience the perfect balance of heat and refreshment.',
-      totalPrice: shawarma && zobo ? shawarma.price + zobo.price : 0,
-      savings: 150, // $1.50 in cents
-      image: '/images/menu/beef-shawarma.jpg',
-      items: [
-        { name: 'Nigerian Shawarma', customizations: ['Beef', 'Extra Sauce', 'Hotdog'] },
-        { name: 'Unsweetened Zobo', customizations: ['Classic'] },
-      ],
-    },
-    {
-      id: 'afternoon-delight',
-      name: 'Afternoon Delight',
-      description:
-        'Perfect for a quick pick-me-up – flaky, savory meat pie paired with our signature sweet zobo for the ultimate comfort experience.',
-      totalPrice: meatPie && zobo ? meatPie.price + zobo.price : 0,
-      savings: 100, // $1.00 in cents
-      image: '/images/menu/beef-meat-pie.jpg',
-      items: [
-        { name: 'Classic Beef Meat Pie', customizations: [] },
-        { name: 'Sweetened Zobo', customizations: ['Medium Sweet'] },
-      ],
-    },
-    {
-      id: 'naija-trio',
-      name: 'Naija Trio Experience',
-      description:
-        'The complete ExpreeZmeal journey – indulge in our premium selection of Nigerian favorites for the ultimate dining experience.',
-      totalPrice: shawarma && zobo && meatPie ? shawarma.price + zobo.price + meatPie.price : 0,
-      savings: 300, // $3.00 in cents
-      image: '/images/menu/zobo.jpg',
-      items: [
-        { name: 'Nigerian Shawarma', customizations: ['Your Choice'] },
-        { name: 'Meat Pie', customizations: [] },
-        { name: 'Zobo', customizations: ['Your Preference'] },
-      ],
-    },
-  ].filter(combo => combo.totalPrice > 0) // Only show combos where all items are available
+  // Get chef's note for today
+  const chefNote = getChefNote()
+
+  // Convert MenuItem objects to RecommendedCombo format for compatibility
+  const recommendations: RecommendedCombo[] = todaysRecommendations.map(combo => ({
+    id: combo.id,
+    name: combo.name,
+    description:
+      combo.description || 'A carefully crafted combination for the ultimate dining experience.',
+    totalPrice: (combo.sale_price || combo.price) / 100, // Convert cents to dollars
+    savings: (combo.price - (combo.sale_price || combo.price)) / 100, // Convert cents to dollars
+    image: combo.image_url || '/images/menu/combo-default.jpg',
+    items: [], // These are pre-built combos, so no individual items to show
+  }))
 
   const handleAddCombo = async (combo: RecommendedCombo) => {
     setAddingCombo(combo.id)
 
     try {
-      // Add each item in the combo to cart
-      for (const comboItem of combo.items) {
-        const menuItem = getItemByName(comboItem.name)
-        if (menuItem) {
-          await addItem(
-            menuItem,
-            1,
-            comboItem.customizations.length > 0
-              ? comboItem.customizations.map(custom => ({
-                  customization_option_id: '',
-                  option_choice_id: '',
-                  option_name: 'Chef Choice',
-                  choice_name: custom,
-                  price_modifier: 0,
-                }))
-              : undefined,
-            `Chef's Recommendation: ${combo.name}`
-          )
-        }
-      }
+      // Find the actual combo menu item from the database
+      const dbComboItem = menuItems.find(item => item.id === combo.id)
 
-      // Mark as added and show success
-      setAddedCombos(prev => new Set([...prev, combo.id]))
+      if (dbComboItem) {
+        // Add the complete combo meal to cart
+        await addItem(
+          dbComboItem,
+          1,
+          undefined,
+          `Chef's ${combo.name} - Complete combo meal with amazing savings!`
+        )
+
+        // Mark as added and show success
+        setAddedCombos(prev => new Set([...prev, combo.id]))
+      }
 
       // Reset loading state after success animation
       setTimeout(() => {
@@ -211,10 +160,33 @@ const ChefRecommendationsModal = ({
                   <h2 className="text-base xs:text-lg sm:text-2xl lg:text-3xl font-display font-bold leading-tight">
                     Chef&apos;s Recommendations
                   </h2>
+                  <div className="bg-white/20 backdrop-blur-sm border border-white/30 rounded-full px-2 py-1 ml-2">
+                    <span className="text-white text-[10px] xs:text-xs font-bold">
+                      NEW EVERY 2 DAYS
+                    </span>
+                  </div>
                 </div>
                 <p className="text-white text-xs xs:text-sm sm:text-base leading-relaxed pr-10 xs:pr-12 sm:pr-16 font-semibold">
-                  Handpicked combos for the perfect Nigerian flavor experience
+                  Today&apos;s featured combos • Rotating selection of {allComboItems.length} unique
+                  combinations
                 </p>
+              </div>
+            </div>
+
+            {/* Chef's Note Section */}
+            <div className="bg-gradient-to-r from-amber-50 to-orange-50 border-y border-amber-200 px-3 xs:px-4 sm:px-6 py-3 xs:py-4 flex-shrink-0">
+              <div className="max-w-6xl mx-auto">
+                <div className="flex items-start gap-2 xs:gap-3 sm:gap-4">
+                  <div className="w-6 h-6 xs:w-8 xs:h-8 bg-amber-500 rounded-full flex items-center justify-center flex-shrink-0">
+                    <Sparkles className="w-3 h-3 xs:w-4 xs:h-4 text-white" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-sm xs:text-base font-bold text-amber-900 mb-1">
+                      Chef&apos;s Note
+                    </h3>
+                    <p className="text-xs xs:text-sm text-amber-800 leading-relaxed">{chefNote}</p>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -355,12 +327,12 @@ const ChefRecommendationsModal = ({
                                     {combo.savings && (
                                       <div className="flex items-center gap-1 mb-1">
                                         <span className="text-xs text-gray-500 line-through">
-                                          ${((combo.totalPrice + combo.savings) / 100).toFixed(2)}
+                                          ${combo.totalPrice.toFixed(2)}
                                         </span>
                                       </div>
                                     )}
                                     <div className="text-lg xs:text-xl font-display font-bold text-neutral-900">
-                                      ${(combo.totalPrice / 100).toFixed(2)}
+                                      ${(combo.totalPrice - (combo.savings || 0)).toFixed(2)}
                                     </div>
                                   </div>
 
@@ -515,15 +487,15 @@ const ChefRecommendationsModal = ({
                               {combo.savings && (
                                 <div className="flex items-center gap-2 mb-1">
                                   <span className="text-sm text-gray-500 line-through">
-                                    ${((combo.totalPrice + combo.savings) / 100).toFixed(2)}
+                                    ${combo.totalPrice.toFixed(2)}
                                   </span>
                                   <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full font-bold">
-                                    Save ${(combo.savings / 100).toFixed(2)}
+                                    Save ${combo.savings.toFixed(2)}
                                   </span>
                                 </div>
                               )}
                               <div className="text-2xl lg:text-3xl font-display font-bold text-neutral-900">
-                                ${(combo.totalPrice / 100).toFixed(2)}
+                                ${(combo.totalPrice - (combo.savings || 0)).toFixed(2)}
                               </div>
                             </div>
 

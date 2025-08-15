@@ -1,0 +1,444 @@
+[
+  {
+    "allergens": null,
+    "calories": 575,
+    "category_id": "adca3e93-316d-4002-b28b-262b477a1e84",
+    "customization_options": [],
+    "description": "Our most popular combo \u2013 pure Naija vibes in every bite and sip. A perfect harmony of our signature shawarma with our refreshing zobo. Includes: Nigerian Shawarma (Chicken, Extra Sauce, Hotdog) + Sweetened Zobo (Extra Sweet)",
+    "dietary_flags": [
+      "halal",
+      "combo"
+    ],
+    "id": "8059cb50-eb99-4365-91a1-a892de740684",
+    "image_url": "/images/menu/og-combo.jpg",
+    "is_featured": true,
+    "name": "The OG Combo",
+    "preparation_time": 20,
+    "price": 1600,
+    "sale_price": 1400
+  },
+  {
+    "allergens": null,
+    "calories": 645,
+    "category_id": "adca3e93-316d-4002-b28b-262b477a1e84",
+    "customization_options": [],
+    "description": "For the real ones who want that fiery kick with a cool-down chaser. Experience the perfect balance of heat and refreshment. Includes: Nigerian Shawarma (Beef, Extra Sauce, Hotdog) + Unsweetened Zobo (Classic)",
+    "dietary_flags": [
+      "halal",
+      "spicy",
+      "combo"
+    ],
+    "id": "a6a321ff-a686-4635-967c-a9bb40d604f9",
+    "image_url": "/images/menu/spicy-boost-box.jpg",
+    "is_featured": true,
+    "name": "Spicy Boost Box",
+    "preparation_time": 22,
+    "price": 1600,
+    "sale_price": 1450
+  },
+  {
+    "allergens": null,
+    "calories": 520,
+    "category_id": "adca3e93-316d-4002-b28b-262b477a1e84",
+    "customization_options": [],
+    "description": "Perfect for our vegetarian friends \u2013 fresh, flavorful, and satisfying. A wholesome combination that doesn't compromise on taste. Includes: Grilled Vegetable Shawarma (Mixed Vegetables, Extra Sauce) + Unsweetened Zobo (Pineapple) + Fresh Meat Pie",
+    "dietary_flags": [
+      "vegetarian",
+      "halal",
+      "combo",
+      "healthy"
+    ],
+    "id": "58148acd-d7a3-4215-b474-a80c79c11f75",
+    "image_url": "/images/menu/veggie-delight-combo.jpg",
+    "is_featured": true,
+    "name": "Veggie Delight Combo",
+    "preparation_time": 18,
+    "price": 145000,
+    "sale_price": 130000
+  },
+  {
+    "allergens": null,
+    "calories": 1850,
+    "category_id": "adca3e93-316d-4002-b28b-262b477a1e84",
+    "customization_options": [],
+    "description": "Share the love with this generous family-sized portion. Perfect for 2-3 people or one very hungry person! Includes: 2x Nigerian Shawarma (Choice of Protein, Extra Sauce, Add Hotdog) + 2x Sweetened Zobo (Mixed Fruits) + 3x Fresh Meat Pies",
+    "dietary_flags": [
+      "halal",
+      "combo",
+      "family-size"
+    ],
+    "id": "b968c21f-47e8-45c9-97a7-e3fd255b7e8a",
+    "image_url": "/images/menu/family-feast-combo.jpg",
+    "is_featured": true,
+    "name": "Family Feast Combo",
+    "preparation_time": 25,
+    "price": 320000,
+    "sale_price": 285000
+  },
+  {
+    "allergens": null,
+    "calories": 385,
+    "category_id": "adca3e93-316d-4002-b28b-262b477a1e84",
+    "customization_options": [],
+    "description": "For those on-the-go moments when you need something quick but delicious. Small but mighty! Includes: Mini Nigerian Shawarma (Chicken, Regular Sauce) + Unsweetened Zobo (Classic)",
+    "dietary_flags": [
+      "halal",
+      "combo",
+      "quick"
+    ],
+    "id": "373044dd-0441-46b1-82f4-f9cf692940bc",
+    "image_url": "/images/menu/quick-bite-combo.jpg",
+    "is_featured": true,
+    "name": "Quick Bite Combo",
+    "preparation_time": 12,
+    "price": 110000,
+    "sale_price": 95000
+  },
+  {
+    "allergens": null,
+    "calories": 980,
+    "category_id": "adca3e93-316d-4002-b28b-262b477a1e84",
+    "customization_options": [],
+    "description": "The ultimate ExpreeZMeal experience \u2013 premium ingredients, extra portions, and special touches. Treat yourself like royalty! Includes: Large Nigerian Shawarma (Mixed Protein, Extra Sauce, Add Hotdog) + Sweetened Zobo (Ginger) + 2x Fresh Meat Pies + Complimentary Nigerian Spice Blend",
+    "dietary_flags": [
+      "halal",
+      "combo",
+      "premium",
+      "extra-large"
+    ],
+    "id": "7989836e-3780-4a79-9059-de7f34554c63",
+    "image_url": "/images/menu/premium-luxury-combo.jpg",
+    "is_featured": true,
+    "name": "Premium Luxury Combo",
+    "preparation_time": 30,
+    "price": 240000,
+    "sale_price": 210000
+  },
+  {
+    "allergens": null,
+    "calories": 695,
+    "category_id": "adca3e93-316d-4002-b28b-262b477a1e84",
+    "customization_options": [],
+    "description": "For the adventurous palate \u2013 a perfect balance of sweet and heat that will take your taste buds on a journey. Includes: Nigerian Shawarma (Beef, Extra Sauce, Add Hotdog) + Sweetened Zobo (Mixed Fruits) + Spicy Seasoning Packet",
+    "dietary_flags": [
+      "halal",
+      "combo",
+      "spicy",
+      "sweet"
+    ],
+    "id": "5df31cf8-f25b-412a-99aa-1750c7d69738",
+    "image_url": "/images/menu/sweet-spicy-adventure.jpg",
+    "is_featured": true,
+    "name": "Sweet & Spicy Adventure",
+    "preparation_time": 20,
+    "price": 175000,
+    "sale_price": 155000
+  },
+  {
+    "allergens": null,
+    "calories": 425,
+    "category_id": "adca3e93-316d-4002-b28b-262b477a1e84",
+    "customization_options": [],
+    "description": "Guilt-free indulgence with all the flavor and nutrition you need. Fresh, light, and absolutely delicious. Includes: Grilled Chicken Shawarma (Lean Protein, Light Sauce) + Unsweetened Zobo (Classic) + Side Salad",
+    "dietary_flags": [
+      "halal",
+      "combo",
+      "healthy",
+      "low-calorie"
+    ],
+    "id": "d9bce564-05fd-4f6d-9729-ba66d089c561",
+    "image_url": "/images/menu/healthy-choice-combo.jpg",
+    "is_featured": true,
+    "name": "Healthy Choice Combo",
+    "preparation_time": 15,
+    "price": 135000,
+    "sale_price": 120000
+  },
+  {
+    "allergens": null,
+    "calories": 520,
+    "category_id": "adca3e93-316d-4002-b28b-262b477a1e84",
+    "customization_options": [],
+    "description": "Perfect for our vegetarian friends \u2013 fresh, flavorful, and satisfying. A wholesome combination that doesn't compromise on taste. Includes: Grilled Vegetable Shawarma (Mixed Vegetables, Extra Sauce) + Unsweetened Zobo (Pineapple) + Fresh Meat Pie",
+    "dietary_flags": [
+      "vegetarian",
+      "halal",
+      "combo",
+      "healthy"
+    ],
+    "id": "3231e68f-b93b-4a26-afea-99ba6e703804",
+    "image_url": "/images/menu/veggie-delight-combo.jpg",
+    "is_featured": true,
+    "name": "Veggie Delight Combo",
+    "preparation_time": 18,
+    "price": 145000,
+    "sale_price": 130000
+  },
+  {
+    "allergens": null,
+    "calories": 1850,
+    "category_id": "adca3e93-316d-4002-b28b-262b477a1e84",
+    "customization_options": [],
+    "description": "Share the love with this generous family-sized portion. Perfect for 2-3 people or one very hungry person! Includes: 2x Nigerian Shawarma (Choice of Protein, Extra Sauce, Add Hotdog) + 2x Sweetened Zobo (Mixed Fruits) + 3x Fresh Meat Pies",
+    "dietary_flags": [
+      "halal",
+      "combo",
+      "family-size"
+    ],
+    "id": "9fcaba53-fc69-4586-96e4-b47acaeca79e",
+    "image_url": "/images/menu/family-feast-combo.jpg",
+    "is_featured": true,
+    "name": "Family Feast Combo",
+    "preparation_time": 25,
+    "price": 320000,
+    "sale_price": 285000
+  },
+  {
+    "allergens": null,
+    "calories": 385,
+    "category_id": "adca3e93-316d-4002-b28b-262b477a1e84",
+    "customization_options": [],
+    "description": "For those on-the-go moments when you need something quick but delicious. Small but mighty! Includes: Mini Nigerian Shawarma (Chicken, Regular Sauce) + Unsweetened Zobo (Classic)",
+    "dietary_flags": [
+      "halal",
+      "combo",
+      "quick"
+    ],
+    "id": "6b499c48-f474-4f36-8813-c0fac4e38206",
+    "image_url": "/images/menu/quick-bite-combo.jpg",
+    "is_featured": true,
+    "name": "Quick Bite Combo",
+    "preparation_time": 12,
+    "price": 110000,
+    "sale_price": 95000
+  },
+  {
+    "allergens": null,
+    "calories": 980,
+    "category_id": "adca3e93-316d-4002-b28b-262b477a1e84",
+    "customization_options": [],
+    "description": "The ultimate ExpreeZMeal experience \u2013 premium ingredients, extra portions, and special touches. Treat yourself like royalty! Includes: Large Nigerian Shawarma (Mixed Protein, Extra Sauce, Add Hotdog) + Sweetened Zobo (Ginger) + 2x Fresh Meat Pies + Complimentary Nigerian Spice Blend",
+    "dietary_flags": [
+      "halal",
+      "combo",
+      "premium",
+      "extra-large"
+    ],
+    "id": "88a54a21-b2c0-4135-a168-72590ad5b177",
+    "image_url": "/images/menu/premium-luxury-combo.jpg",
+    "is_featured": true,
+    "name": "Premium Luxury Combo",
+    "preparation_time": 30,
+    "price": 240000,
+    "sale_price": 210000
+  },
+  {
+    "allergens": null,
+    "calories": 695,
+    "category_id": "adca3e93-316d-4002-b28b-262b477a1e84",
+    "customization_options": [],
+    "description": "For the adventurous palate \u2013 a perfect balance of sweet and heat that will take your taste buds on a journey. Includes: Nigerian Shawarma (Beef, Extra Sauce, Add Hotdog) + Sweetened Zobo (Mixed Fruits) + Spicy Seasoning Packet",
+    "dietary_flags": [
+      "halal",
+      "combo",
+      "spicy",
+      "sweet"
+    ],
+    "id": "1c1d1c9e-801e-417b-8cad-565fa35273d9",
+    "image_url": "/images/menu/sweet-spicy-adventure.jpg",
+    "is_featured": true,
+    "name": "Sweet & Spicy Adventure",
+    "preparation_time": 20,
+    "price": 175000,
+    "sale_price": 155000
+  },
+  {
+    "allergens": null,
+    "calories": 450,
+    "category_id": "a39bc404-6135-4d84-a022-ed9b637d3650",
+    "customization_options": [
+      {
+        "choices": [
+          {
+            "display_order": 1,
+            "id": "36370bc2-9c18-40ca-aaba-e41cdb59f8f6",
+            "is_default": true,
+            "name": "Chicken",
+            "price_modifier": 0
+          },
+          {
+            "display_order": 2,
+            "id": "de26559e-8662-4fc1-877d-dfb4867420c6",
+            "is_default": false,
+            "name": "Beef",
+            "price_modifier": 300
+          },
+          {
+            "display_order": 3,
+            "id": "30caeca6-fb29-4780-9c79-ccae22b1ff1d",
+            "is_default": false,
+            "name": "Mixed (Chicken & Beef)",
+            "price_modifier": 300
+          }
+        ],
+        "display_order": 1,
+        "id": "e45e3c5a-2fb3-4f64-b96d-d2fe4e21e4ce",
+        "is_required": true,
+        "name": "Protein",
+        "type": "SINGLE_SELECT"
+      },
+      {
+        "choices": [
+          {
+            "display_order": 1,
+            "id": "9d6a5cc4-b13a-4a7f-8293-56eb725a89ce",
+            "is_default": false,
+            "name": "Extra Sauce",
+            "price_modifier": 75
+          },
+          {
+            "display_order": 2,
+            "id": "f7bcbfc2-a617-45c6-9cc7-15237e8bac82",
+            "is_default": false,
+            "name": "Add Hotdog",
+            "price_modifier": 200
+          }
+        ],
+        "display_order": 2,
+        "id": "cb9d52ff-f0cd-42cc-b843-adb884d02a24",
+        "is_required": false,
+        "name": "Add-ons",
+        "type": "MULTI_SELECT"
+      }
+    ],
+    "description": "Delicious wrapped Middle Eastern-style grilled meat with fresh vegetables and signature sauce. Choose your protein and add-ons.",
+    "dietary_flags": [
+      "halal",
+      "customizable"
+    ],
+    "id": "d51712d5-2b18-453b-b301-8f04b5c612c5",
+    "image_url": "/images/menu/chicken-shawarma.jpg",
+    "is_featured": true,
+    "name": "Shawarma",
+    "preparation_time": 15,
+    "price": 1200,
+    "sale_price": null
+  },
+  {
+    "allergens": null,
+    "calories": 25,
+    "category_id": "60219e88-2d74-4e18-b173-f82acf91c7a6",
+    "customization_options": [
+      {
+        "choices": [
+          {
+            "display_order": 1,
+            "id": "d5fbc4a8-a9a1-4a2d-8543-2cf41fadc280",
+            "is_default": true,
+            "name": "Sweetened",
+            "price_modifier": 0
+          },
+          {
+            "display_order": 2,
+            "id": "d10b9785-2ce7-4691-83e8-da75c650ac60",
+            "is_default": false,
+            "name": "Unsweetened",
+            "price_modifier": 0
+          }
+        ],
+        "display_order": 1,
+        "id": "b651d0bf-4e29-492d-a9a1-bcdafea9d874",
+        "is_required": true,
+        "name": "Sweetness Level",
+        "type": "SINGLE_SELECT"
+      },
+      {
+        "choices": [
+          {
+            "display_order": 1,
+            "id": "069bf05e-d750-4041-9c4d-40f01cd683bb",
+            "is_default": true,
+            "name": "Classic",
+            "price_modifier": 0
+          },
+          {
+            "display_order": 2,
+            "id": "51bcb6aa-02f3-4371-96b6-1894df7da960",
+            "is_default": false,
+            "name": "Ginger",
+            "price_modifier": 300
+          },
+          {
+            "display_order": 3,
+            "id": "c9f77eb6-017d-4938-8052-b41fdc5e5719",
+            "is_default": false,
+            "name": "Pineapple",
+            "price_modifier": 300
+          },
+          {
+            "display_order": 4,
+            "id": "375379db-b386-46ca-8dcb-304bcfb6a918",
+            "is_default": false,
+            "name": "Mixed Fruits",
+            "price_modifier": 300
+          }
+        ],
+        "display_order": 2,
+        "id": "8be8a509-6999-4170-9e02-dbc1afd3d3b2",
+        "is_required": false,
+        "name": "Flavor",
+        "type": "SINGLE_SELECT"
+      }
+    ],
+    "description": "Refreshing Nigerian herbal drink made with hibiscus leaves and natural spices. Choose your flavor and sweetness level.",
+    "dietary_flags": [
+      "healthy",
+      "vegan",
+      "customizable"
+    ],
+    "id": "24794c89-fe6a-4c84-b812-1f1c461ec503",
+    "image_url": "/images/menu/zobo.jpg",
+    "is_featured": true,
+    "name": "Zobo",
+    "preparation_time": 5,
+    "price": 400,
+    "sale_price": null
+  },
+  {
+    "allergens": null,
+    "calories": 320,
+    "category_id": "5fdb7b1d-2d39-4833-a838-556b0618c6f0",
+    "customization_options": [],
+    "description": "Fresh baked flaky pastry with seasoned meat filling.",
+    "dietary_flags": [
+      "halal"
+    ],
+    "id": "2855db19-6c55-46ec-8a8f-8ebf337c10d1",
+    "image_url": "/images/menu/chicken-meat-pie.jpg",
+    "is_featured": true,
+    "name": "Meat Pie",
+    "preparation_time": 10,
+    "price": 800,
+    "sale_price": null
+  },
+  {
+    "allergens": null,
+    "calories": 425,
+    "category_id": "adca3e93-316d-4002-b28b-262b477a1e84",
+    "customization_options": [],
+    "description": "Guilt-free indulgence with all the flavor and nutrition you need. Fresh, light, and absolutely delicious. Includes: Grilled Chicken Shawarma (Lean Protein, Light Sauce) + Unsweetened Zobo (Classic) + Side Salad",
+    "dietary_flags": [
+      "halal",
+      "combo",
+      "healthy",
+      "low-calorie"
+    ],
+    "id": "24485444-c257-41df-83ab-03c42a107498",
+    "image_url": "/images/menu/healthy-choice-combo.jpg",
+    "is_featured": true,
+    "name": "Healthy Choice Combo",
+    "preparation_time": 15,
+    "price": 135000,
+    "sale_price": 120000
+  }
+]
