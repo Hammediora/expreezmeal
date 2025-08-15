@@ -36,6 +36,9 @@ jobs:
 
       - name: Run Python unit tests
         run: |
+          python3 -m venv venv
+          . venv/bin/activate
+          pip install --upgrade pip
           pip install -r backend/requirements.txt
           python3 -m unittest discover -s backend -p 'test_*.py'
 
