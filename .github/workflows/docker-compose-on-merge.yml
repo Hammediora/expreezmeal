@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   deployment:
-    runs-on: docker-prod
+    runs-on: self-hosted
 
     steps:
       - name: Block direct pushes to dev/prod (allow merges only)
