@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   deployment:
-    runs-on: self-hosted
+    runs-on: docker-prod
 
     steps:
       - name: Block direct pushes to dev/prod (allow merges only)
@@ -20,6 +20,9 @@ jobs:
         run: |
           echo "Direct pushes to dev or prod are not allowed. Please use pull requests and merge only."
           exit 1
+      
+      - name: Cleanup workspace permissions
+        run: sudo chown -R $USER:$USER /home/prod-server-new/expreezmeal-project/actions-runner/_work/expreezmeal/expreezmeal
 
       - name: Checkout code
         uses: actions/checkout@v4
