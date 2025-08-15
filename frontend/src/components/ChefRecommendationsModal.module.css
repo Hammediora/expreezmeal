@@ -1,0 +1,17 @@
+/* Custom Swiper Styles for Chef Recommendations Modal */
+.chefRecommendationsSwiper :global(.swiper-pagination-bullet) {
+  background: #d4af37 !important;
+  width: 8px !important;
+  height: 8px !important;
+  opacity: 0.5 !important;
+}
+
+.chefRecommendationsSwiper :global(.swiper-pagination-bullet-active) {
+  background: #d4af37 !important;
+  opacity: 1 !important;
+  transform: scale(1.2) !important;
+}
+
+.chefRecommendationsSwiper :global(.swiper-pagination) {
+  bottom: 8px !important;
+}

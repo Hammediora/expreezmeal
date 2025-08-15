@@ -4,8 +4,12 @@ import { loadStripe } from '@stripe/stripe-js'
 import { Elements } from '@stripe/react-stripe-js'
 import { ReactNode } from 'react'
 
-// Initialize Stripe
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
+// Initialize Stripe with proper error handling
+const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+if (!publishableKey) {
+  throw new Error('NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY environment variable is not set.');
+}
+const stripePromise = loadStripe(publishableKey);
 
 interface StripeProviderProps {
   children: ReactNode

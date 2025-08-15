@@ -65,8 +65,10 @@ export default function MenuPage() {
 
   const filteredItems =
     selectedCategory === 'all'
-      ? menuItems
-      : menuItems.filter(item => item.category_id === selectedCategory)
+      ? menuItems.filter(item => !item.dietary_flags?.includes('combo')) // Exclude combos from main menu
+      : menuItems.filter(
+          item => item.category_id === selectedCategory && !item.dietary_flags?.includes('combo')
+        )
 
   const handleCardClick = (itemId: string) => {
     const item = filteredItems.find(item => item.id === itemId)
@@ -182,19 +184,21 @@ export default function MenuPage() {
                     >
                       All Items
                     </button>
-                    {categories.map(category => (
-                      <button
-                        key={category.id}
-                        onClick={() => handleCategoryChange(category.id)}
-                        className={`w-full px-4 py-3 text-left font-semibold transition-all duration-300 hover:bg-neutral-50 ${
-                          selectedCategory === category.id
-                            ? 'bg-secondary-50 text-secondary-700 border-l-4 border-secondary-500'
-                            : 'text-neutral-700'
-                        }`}
-                      >
-                        {category.name}
-                      </button>
-                    ))}
+                    {categories
+                      .filter(category => category.name !== 'Combos')
+                      .map(category => (
+                        <button
+                          key={category.id}
+                          onClick={() => handleCategoryChange(category.id)}
+                          className={`w-full px-4 py-3 text-left font-semibold transition-all duration-300 hover:bg-neutral-50 ${
+                            selectedCategory === category.id
+                              ? 'bg-secondary-50 text-secondary-700 border-l-4 border-secondary-500'
+                              : 'text-neutral-700'
+                          }`}
+                        >
+                          {category.name}
+                        </button>
+                      ))}
                   </motion.div>
                 )}
               </div>
@@ -223,20 +227,22 @@ export default function MenuPage() {
                     All Items
                   </button>
                 </SwiperSlide>
-                {categories.map(category => (
-                  <SwiperSlide key={category.id} style={{ width: 'auto' }}>
-                    <button
-                      onClick={() => handleCategoryChange(category.id)}
-                      className={`px-4 py-2.5 rounded-full font-semibold transition-all duration-300 text-sm whitespace-nowrap ${
-                        selectedCategory === category.id
-                          ? 'bg-secondary-600 text-white shadow-lg'
-                          : 'bg-white text-neutral-700 hover:bg-neutral-100 border border-neutral-200'
-                      }`}
-                    >
-                      {category.name}
-                    </button>
-                  </SwiperSlide>
-                ))}
+                {categories
+                  .filter(category => category.name !== 'Combos')
+                  .map(category => (
+                    <SwiperSlide key={category.id} style={{ width: 'auto' }}>
+                      <button
+                        onClick={() => handleCategoryChange(category.id)}
+                        className={`px-4 py-2.5 rounded-full font-semibold transition-all duration-300 text-sm whitespace-nowrap ${
+                          selectedCategory === category.id
+                            ? 'bg-secondary-600 text-white shadow-lg'
+                            : 'bg-white text-neutral-700 hover:bg-neutral-100 border border-neutral-200'
+                        }`}
+                      >
+                        {category.name}
+                      </button>
+                    </SwiperSlide>
+                  ))}
               </Swiper>
             </div>
 
@@ -252,19 +258,21 @@ export default function MenuPage() {
               >
                 All Items
               </button>
-              {categories.map(category => (
-                <button
-                  key={category.id}
-                  onClick={() => handleCategoryChange(category.id)}
-                  className={`px-6 py-3 rounded-full font-semibold transition-all duration-300 text-base ${
-                    selectedCategory === category.id
-                      ? 'bg-secondary-600 text-white shadow-lg'
-                      : 'bg-white text-neutral-700 hover:bg-neutral-100 border border-neutral-200'
-                  }`}
-                >
-                  {category.name}
-                </button>
-              ))}
+              {categories
+                .filter(category => category.name !== 'Combos')
+                .map(category => (
+                  <button
+                    key={category.id}
+                    onClick={() => handleCategoryChange(category.id)}
+                    className={`px-6 py-3 rounded-full font-semibold transition-all duration-300 text-base ${
+                      selectedCategory === category.id
+                        ? 'bg-secondary-600 text-white shadow-lg'
+                        : 'bg-white text-neutral-700 hover:bg-neutral-100 border border-neutral-200'
+                    }`}
+                  >
+                    {category.name}
+                  </button>
+                ))}
             </div>
           </motion.div>
 

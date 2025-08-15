@@ -88,7 +88,7 @@ const Footer = () => {
                 <ChevronDown className="w-4 h-4" />
               )}
             </button>
-            
+
             {showQuickLinks && (
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
@@ -138,7 +138,7 @@ const Footer = () => {
                 <ChevronDown className="w-4 h-4" />
               )}
             </button>
-            
+
             {showContactInfo && (
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
@@ -151,14 +151,14 @@ const Footer = () => {
                   <MapPin className="w-3 h-3 mr-2 flex-shrink-0" />
                   Chicago, Illinois
                 </p>
-                <a 
+                <a
                   href="tel:3125550123"
                   className="flex items-center text-sm hover:text-white transition-colors"
                 >
                   <Phone className="w-3 h-3 mr-2 flex-shrink-0" />
                   +1 (312) 555-0123
                 </a>
-                <a 
+                <a
                   href="mailto:info@expreezmeal.com"
                   className="flex items-center text-sm hover:text-white transition-colors"
                 >
@@ -285,14 +285,14 @@ const Footer = () => {
                 <MapPin className="w-4 h-4 mr-2 flex-shrink-0" />
                 Chicago, Illinois
               </p>
-              <a 
+              <a
                 href="tel:3125550123"
                 className="flex items-center hover:text-white transition-colors"
               >
                 <Phone className="w-4 h-4 mr-2 flex-shrink-0" />
                 +1 (312) 555-0123
               </a>
-              <a 
+              <a
                 href="mailto:info@expreezmeal.com"
                 className="flex items-center hover:text-white transition-colors"
               >

@@ -12,6 +12,9 @@ import {
   isTokenValid,
 } from '@/lib/auth'
 
+// Configuration constants
+const AUTO_LOGOUT_THRESHOLD_SECONDS = 60
+
 interface AdminAuthContextType {
   user: AdminUser | null
   loading: boolean
@@ -50,8 +53,8 @@ export const AdminAuthProvider: React.FC<AdminAuthProviderProps> = ({ children }
       const remaining = getTokenTimeRemaining(stored.token)
       setTokenTimeRemaining(remaining)
 
-      // Auto logout if token expires in less than 60 seconds
-      if (remaining < 60 && remaining > 0) {
+      // Auto logout if token expires in less than AUTO_LOGOUT_THRESHOLD_SECONDS
+      if (remaining < AUTO_LOGOUT_THRESHOLD_SECONDS && remaining > 0) {
         console.warn('Token expiring soon, logging out...')
         // Use clearStoredAuth directly to avoid circular dependency
         clearStoredAuth()

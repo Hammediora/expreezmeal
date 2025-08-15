@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 from flask import render_template_string
 from jinja2 import Environment, FileSystemLoader
 import json
+import time
 
 # Load environment variables
 load_dotenv()
@@ -28,14 +29,15 @@ class EmailService:
     """Service for sending emails using Resend with Jinja2 templates"""
 
     def __init__(self):
+        # Use the verified bellocraft.com domain
         self.from_email = "orders@bellocraft.com"
-        self.support_email = "support@bellocraft.com"
+        self.support_email = "info@bellocraft.com"
         self.pickup_address = {
-            "street": "123 Main Street",
-            "city": "New York",
-            "state": "NY",
-            "zip": "10001",
-            "phone": "(555) 123-4567"
+            "street": "123 N Michigan Avenue, Downtown",
+            "city": "Chicago",
+            "state": "IL",
+            "zip": "60601",
+            "phone": "(312) 555-0123"
         }
 
     def _render_template(self, template_name: str, **context) -> str:
@@ -54,6 +56,43 @@ class EmailService:
         except Exception as e:
             print(f" Template rendering error: {str(e)}")
             return ""
+
+    def _send_email_with_retry(self, email_data: dict, max_retries: int = 3, delay: float = 2.0) -> tuple[bool, str]:
+        """Send email with retry logic for better reliability"""
+        for attempt in range(max_retries):
+            try:
+                response = resend.Emails.send(email_data)
+                return True, response.get('id', 'N/A')
+            except Exception as e:
+                error_msg = str(e) if str(e) else type(e).__name__
+
+                # Check for rate limiting
+                if "Too many requests" in error_msg or "rate limit" in error_msg.lower():
+                    if attempt < max_retries - 1:
+                        # For rate limiting, wait longer
+                        rate_limit_delay = delay * 2  # Double the delay for rate limits
+                        print(f"⚠️ Rate limit hit on attempt {attempt + 1}, waiting {rate_limit_delay}s...")
+                        time.sleep(rate_limit_delay)
+                        continue
+
+                # Try to get more detailed error info
+                if hasattr(e, 'response') and e.response:
+                    try:
+                        status_code = getattr(e.response, 'status_code', 'N/A')
+                        response_text = getattr(e.response, 'text', 'N/A')
+                        error_msg = f"{error_msg} (HTTP {status_code}: {response_text})"
+                    except:
+                        pass
+
+                if attempt < max_retries - 1:
+                    print(f"⚠️ Email attempt {attempt + 1} failed: {error_msg} (retrying in {delay}s...)")
+                    time.sleep(delay)
+                    delay *= 1.5  # Gentler exponential backoff
+                else:
+                    print(f"❌ Email failed after {max_retries} attempts: {error_msg}")
+                    print(f"   Exception type: {type(e).__name__}")
+                    return False, error_msg
+        return False, "Max retries exceeded"
 
     def send_order_confirmation(self, order_data: Dict, customer_info: Dict) -> bool:
         """Send order confirmation email to customer"""
@@ -78,20 +117,28 @@ class EmailService:
             if not html_content:
                 return False
 
-            # Send email
-            response = resend.Emails.send({
+            # Prepare email data
+            email_data = {
                 "from": self.from_email,
                 "to": customer_info.get('email'),
-                "subject": f" Your ExpreeZmeal Order #{order_data.get('order_id')} is Confirmed!",
+                "subject": f"🍽️ Your ExpreeZmeal Order #{order_data.get('order_id')} is Confirmed!",
                 "html": html_content
-            })
+            }
 
-            print(f"Order confirmation email sent to {customer_info.get('email')}")
-            print(f"Email ID: {response.get('id', 'N/A')}")
-            return True
+            # Send email with retry logic
+            success, result = self._send_email_with_retry(email_data)
+
+            if success:
+                print(f"✅ Order confirmation email sent to {customer_info.get('email')}")
+                print(f"   Email ID: {result}")
+                return True
+            else:
+                return False
 
         except Exception as e:
-            print(f" Failed to send order confirmation email: {str(e)}")
+            error_msg = str(e) if str(e) else type(e).__name__
+            print(f"❌ Failed to send order confirmation email: {error_msg}")
+            print(f"   Exception type: {type(e).__name__}")
             return False
 
     def send_order_status_update(self, order_data: Dict, customer_info: Dict, new_status: str) -> bool:
@@ -131,18 +178,28 @@ class EmailService:
             if not html_content:
                 return False
 
-            response = resend.Emails.send({
+            # Prepare email data
+            email_data = {
                 "from": self.from_email,
                 "to": customer_info.get('email'),
-                "subject": f" Order #{order_data.get('order_id')} Update: {new_status}",
+                "subject": f"🍽️ Order #{order_data.get('order_id')} Update: {new_status}",
                 "html": html_content
-            })
+            }
 
-            print(f"✅ Status update email sent to {customer_info.get('email')}")
-            return True
+            # Send email with retry logic
+            success, result = self._send_email_with_retry(email_data)
+
+            if success:
+                print(f"✅ Status update email sent to {customer_info.get('email')}")
+                print(f"   Email ID: {result}")
+                return True
+            else:
+                return False
 
         except Exception as e:
-            print(f"❌ Failed to send status update email: {str(e)}")
+            error_msg = str(e) if str(e) else type(e).__name__
+            print(f"❌ Failed to send status update email: {error_msg}")
+            print(f"   Exception type: {type(e).__name__}")
             return False
 
     def send_new_menu_item_notification(self, item_data: Dict, customer_emails: List[str]) -> bool:

@@ -84,7 +84,7 @@ const Cart = ({
                 className="p-2 hover:bg-neutral-100 rounded-full transition-colors"
                 aria-label="Close cart"
               >
-                <X className="w-5 h-5 sm:w-6 sm:h-6" />
+                <X className="w-5 h-5 sm:w-6 sm:h-6 text-black" />
               </button>
             </div>
 
@@ -136,7 +136,7 @@ const Cart = ({
 
                       {/* Item Details */}
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-semibold text-neutral-800 truncate text-sm sm:text-base">
+                        <h4 className="font-bold text-neutral-900 truncate text-sm sm:text-base">
                           {item.name}
                         </h4>
 
@@ -146,13 +146,13 @@ const Cart = ({
                             {item.customizations.map((customization, index) => (
                               <div
                                 key={index}
-                                className="text-xs text-neutral-600 flex justify-between"
+                                className="text-xs text-neutral-700 flex justify-between"
                               >
                                 <span>
                                   {customization.option_name}: {customization.choice_name}
                                 </span>
                                 {customization.price_modifier > 0 && (
-                                  <span className="text-secondary-600 font-medium">
+                                  <span className="font-medium text-shadow-black">
                                     +{formatCurrency(customization.price_modifier / 100)}
                                   </span>
                                 )}
@@ -168,7 +168,7 @@ const Cart = ({
                           </div>
                         )}
 
-                        <p className="text-secondary-600 font-semibold mt-1">
+                        <p className="text-black font-semibold mt-1">
                           {formatCurrency(
                             (item.price +
                               (item.customizations?.reduce(
@@ -190,17 +190,17 @@ const Cart = ({
                           className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-white hover:bg-[#d4af37] hover:text-white flex items-center justify-center transition-all duration-200 shadow-sm border border-gray-200"
                           aria-label="Decrease quantity"
                         >
-                          <Minus className="w-3 h-3" />
+                          <Minus className="w-3 h-3 text-black" />
                         </button>
-                        <span className="w-4 sm:w-6 text-center font-semibold text-xs sm:text-sm">
+                        <span className="w-4 sm:w-6 text-center font-semibold text-xs sm:text-sm text-black">
                           {item.quantity}
                         </span>
                         <button
                           onClick={() => onUpdateQuantity(item.id, item.quantity + 1)}
-                          className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-white hover:bg-[#d4af37] hover:text-white flex items-center justify-center transition-all duration-200 shadow-sm border border-gray-200"
+                          className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-white hover:bg-[#d4af37] hover:text-white flex items-center justify-center transition-all duration-200 shadow-sm border border-gray-200 "
                           aria-label="Increase quantity"
                         >
-                          <Plus className="w-3 h-3" />
+                          <Plus className="w-3 h-3 text-black" />
                         </button>
                       </div>
 

@@ -27,29 +27,34 @@ def seed_database():
         # Sample Categories
         categories_data = [
             {
+                'name': 'Combos',
+                'description': 'Popular combo meals with great savings',
+                'display_order': 1
+            },
+            {
                 'name': 'Shawarma',
                 'description': 'Delicious wrapped Middle Eastern-style grilled meats',
-                'display_order': 1
+                'display_order': 2
             },
             {
                 'name': 'Rice Dishes',
                 'description': 'Authentic Nigerian rice preparations',
-                'display_order': 2
+                'display_order': 3
             },
             {
                 'name': 'Snacks',
                 'description': 'Traditional Nigerian snacks and finger foods',
-                'display_order': 3
+                'display_order': 4
             },
             {
                 'name': 'Beverages',
                 'description': 'Refreshing drinks and traditional beverages',
-                'display_order': 4
+                'display_order': 5
             },
             {
                 'name': 'Meat Pies',
                 'description': 'Fresh baked pastries with savory fillings',
-                'display_order': 5
+                'display_order': 6
             }
         ]
 
@@ -64,6 +69,32 @@ def seed_database():
 
         # Sample Menu Items (prices in USD cents)
         menu_items_data = [
+            # Combos
+            {
+                'category': 'Combos',
+                'name': 'The OG Combo',
+                'description': 'Our most popular combo – pure Naija vibes in every bite and sip. A perfect harmony of our signature shawarma with our refreshing zobo. Includes: Nigerian Shawarma (Chicken, Extra Sauce, Hotdog) + Sweetened Zobo (Extra Sweet)',
+                'price': 1600,  # Regular $16.00
+                'sale_price': 1400,  # Sale $14.00 (Save $2.00)
+                'image_url': '/images/menu/og-combo.jpg',
+                'is_featured': True,
+                'preparation_time': 20,
+                'calories': 575,
+                'dietary_flags': ['halal', 'combo']
+            },
+            {
+                'category': 'Combos',
+                'name': 'Spicy Boost Box',
+                'description': 'For the real ones who want that fiery kick with a cool-down chaser. Experience the perfect balance of heat and refreshment. Includes: Nigerian Shawarma (Beef, Extra Sauce, Hotdog) + Unsweetened Zobo (Classic)',
+                'price': 1600,  # Regular $16.00
+                'sale_price': 1450,  # Sale $14.50 (Save $1.50)
+                'image_url': '/images/menu/spicy-boost-box.jpg',
+                'is_featured': True,
+                'preparation_time': 22,
+                'calories': 645,
+                'dietary_flags': ['halal', 'spicy', 'combo']
+            },
+
             # Shawarma
             {
                 'category': 'Shawarma',

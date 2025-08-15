@@ -2,8 +2,9 @@
 
 import React, { useState, useEffect } from 'react'
 import Image from 'next/image'
-import { X, Plus, Minus, ShoppingCart, Settings } from 'lucide-react'
+import { X, Plus, Minus, ShoppingCart, Settings, Info } from 'lucide-react'
 import { MenuItem, CustomizationOption, CartItemCustomization } from '../types'
+import NutritionModal from './NutritionModal'
 
 interface ProductModalProps {
   isOpen: boolean
@@ -28,6 +29,7 @@ export default function ProductModal({
     {}
   )
   const [specialInstructions, setSpecialInstructions] = useState('')
+  const [showNutritionModal, setShowNutritionModal] = useState(false)
 
   useEffect(() => {
     if (isOpen && menuItem) {
@@ -124,6 +126,17 @@ export default function ProductModal({
           <p className="text-neutral-700 mb-4 sm:mb-6 text-sm sm:text-base leading-relaxed">
             {menuItem.description}
           </p>
+
+          {/* Nutrition Info Button */}
+          <div className="mb-4 sm:mb-6">
+            <button
+              onClick={() => setShowNutritionModal(true)}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-lg text-amber-800 hover:text-amber-900 transition-all duration-200 text-sm font-medium"
+            >
+              <Info size={16} />
+              <span>View Nutrition Info</span>
+            </button>
+          </div>
 
           {/* Base Price */}
           <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-emerald-50 rounded-xl border border-emerald-100">
@@ -240,6 +253,13 @@ export default function ProductModal({
           </button>
         </div>
       </div>
+
+      {/* Nutrition Modal */}
+      <NutritionModal
+        isOpen={showNutritionModal}
+        onClose={() => setShowNutritionModal(false)}
+        menuItem={menuItem}
+      />
     </div>
   )
 }

@@ -4,7 +4,11 @@ import path from "path";
 const nextConfig: NextConfig = {
   output: "standalone",
 
-  experimental: {},
+  turbopack: {
+    resolveAlias: {
+      "@": path.resolve(__dirname, "src"),
+    },
+  },
 
   images: {
     remotePatterns: [
@@ -19,11 +23,6 @@ const nextConfig: NextConfig = {
     ],
     dangerouslyAllowSVG: true,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
-  },
-  
-  webpack: (config) => {
-    config.resolve.alias["@"] = path.resolve(__dirname, "src");
-    return config;
   },
 };
 
