@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   backend:
     build:
@@ -18,7 +16,7 @@ services:
       - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
       - RESEND_API_KEY=${RESEND_API_KEY}
     networks:
-      - app-network
+      - cloudflare-prod-net
     restart: unless-stopped
 
   frontend:
@@ -37,7 +35,7 @@ services:
     depends_on:
       - backend
     networks:
-      - app-network
+      - cloudflare-prod-net
     restart: unless-stopped
 
   nginx:
@@ -53,12 +51,12 @@ services:
       - frontend
       - backend
     networks:
-      - app-network
+      - cloudflare-prod-net
     restart: unless-stopped
 
 networks:
-  app-network:
-    driver: bridge
+  cloudflare-prod-net:
+    external: true
 
 volumes:
   postgres_data:

@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   backend:
     build:
@@ -8,16 +6,12 @@ services:
     container_name: expreezmeal-backend-dev
     ports:
       - "5000:5000"
-    environment:
-      - FLASK_ENV=development
-      - DATABASE_URL=${DATABASE_URL}
-      - SECRET_KEY=${SECRET_KEY}
-      - EMAIL_SENDER=${EMAIL_SENDER}
-      - EMAIL_PASSWORD=${EMAIL_PASSWORD}
+    env_file:
+      - .env
     volumes:
       - ./backend:/app
     networks:
-      - app-network
+      - cloudflare-prod-net
     restart: unless-stopped
 
   frontend:
@@ -27,18 +21,45 @@ services:
     container_name: expreezmeal-frontend-dev
     ports:
       - "3000:3000"
-    environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:5000
-      - NODE_ENV=development
+    env_file:
+      - .env
     volumes:
       - ./frontend:/app
       - /app/node_modules
     depends_on:
       - backend
     networks:
-      - app-network
+      - cloudflare-prod-net
     restart: unless-stopped
 
+  redis:
+    image: redis:alpine
+    container_name: expreezmeal-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - cloudflare-prod-net
+    restart: unless-stopped
+
+  database:
+    image: postgres:alpine
+    container_name: expreezmeal-database
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: expreezmeal
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    networks:
+      - cloudflare-prod-net
+    restart: unless-stopped
+
+
 networks:
-  app-network:
-    driver: bridge
+  cloudflare-prod-net:
+    external: true
+
+volumes:
+  db_data:
