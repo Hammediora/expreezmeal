@@ -2,64 +2,65 @@ name: CI/CD Docker Compose on Self-Hosted Runner
 
 on:
   push:
-    branches:
-      - dev
-      - prod
+    branches: [dev, prod]
 
 jobs:
   check-merge:
     runs-on: self-hosted
+
     steps:
-      - name: Check if event is a merge commit
-        id: check_merge
-        run: |
-          # Get the commit message
-          COMMIT_MSG=$(git log -1 --pretty=%B)
-          # Check if the commit is a merge commit
-          if [[ "$COMMIT_MSG" == Merge* ]]; then
-            echo "merge_commit=true" >> $GITHUB_OUTPUT
-          else
-            echo "merge_commit=false" >> $GITHUB_OUTPUT
-          fi
-      - name: Reject direct push to dev or prod
-        if: steps.check_merge.outputs.merge_commit == 'false'
+      # Use the push event payload instead of shelling out to git
+      - name: Block direct pushes to dev/prod (allow merges only)
+        if: ${{ !startsWith(github.event.head_commit.message, 'Merge') }}
         run: |
           echo "Direct pushes to dev or prod are not allowed. Please use pull requests and merge only."
           exit 1
+
       - name: Checkout code
-        if: steps.check_merge.outputs.merge_commit == 'true'
         uses: actions/checkout@v4
+
       - name: Run GitHub Super-Linter
-        if: steps.check_merge.outputs.merge_commit == 'true'
         uses: super-linter/super-linter@v8.0.0
         env:
           VALIDATE_ALL_CODEBASE: false
           DEFAULT_BRANCH: dev
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Initialize CodeQL
-        if: steps.check_merge.outputs.merge_commit == 'true'
         uses: github/codeql-action/init@v3
         with:
           languages: python,javascript
+
       - name: Perform CodeQL Analysis
-        if: steps.check_merge.outputs.merge_commit == 'true'
         uses: github/codeql-action/analyze@v3
-      - name: Run Trivy vulnerability scanner on Docker images
-        if: steps.check_merge.outputs.merge_commit == 'true'
-        uses: aquasecurity/trivy-action@v0.28.0
+
+      # Trivy for docker-compose (IaC) misconfig scan
+      - name: Trivy scan docker-compose.yml (IaC)
+        uses: aquasecurity/trivy-action@0.28.0
         with:
-          scan-type: docker-compose
-          scan-ref: docker-compose.yml
+          scan-type: config
+          scan-ref: docker-compose.yaml
           format: table
           exit-code: 1
           ignore-unfixed: true
           severity: CRITICAL,HIGH
+
+      # (Optional) Trivy image scan if you build images in this pipeline
+      # - name: Trivy scan built image
+      #   uses: aquasecurity/trivy-action@0.28.0
+      #   with:
+      #     scan-type: image
+      #     image-ref: your-image:tag
+      #     format: table
+      #     exit-code: 1
+      #     ignore-unfixed: true
+      #     severity: CRITICAL,HIGH
+
       - name: Run Python unit tests
-        if: steps.check_merge.outputs.merge_commit == 'true'
         run: |
           pip install -r backend/requirements.txt
           python3 -m unittest discover -s backend -p 'test_*.py'
+
       - name: Run Docker Compose
-        if: steps.check_merge.outputs.merge_commit == 'true'
         run: |
           docker compose -f docker-compose.yml up -d --build
