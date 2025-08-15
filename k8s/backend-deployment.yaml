@@ -24,7 +24,7 @@ spec:
                 - k8s-ser
       containers:
       - name: expreezmeal-backend
-        image: BACKEND_IMAGE_NAME
+        image: expreezmeal/backend:latest
         resources:
           limits:
             memory: "256Mi"

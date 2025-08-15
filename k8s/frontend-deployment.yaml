@@ -24,7 +24,7 @@ spec:
                 - k8s-ser
       containers:
       - name: expreezmeal-frontend
-        image: FRONTEND_IMAGE_NAME
+        image: expreezmeal/frontend:latest
         resources:
           limits:
             memory: "512Mi"

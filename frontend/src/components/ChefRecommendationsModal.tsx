@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
+import styles from './ChefRecommendationsModal.module.css'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   ChefHat,
@@ -198,23 +199,6 @@ const ChefRecommendationsModal = ({
                 <div className="absolute bottom-10 right-10 w-40 h-40 bg-primary-400 rounded-full blur-3xl"></div>
               </div>
 
-              {/* Custom Swiper Styles */}
-              <style jsx global>{`
-                .chef-recommendations-swiper .swiper-pagination-bullet {
-                  background: #d4af37 !important;
-                  width: 8px !important;
-                  height: 8px !important;
-                  opacity: 0.5 !important;
-                }
-                .chef-recommendations-swiper .swiper-pagination-bullet-active {
-                  background: #d4af37 !important;
-                  opacity: 1 !important;
-                  transform: scale(1.2) !important;
-                }
-                .chef-recommendations-swiper .swiper-pagination {
-                  bottom: 8px !important;
-                }
-              `}</style>
 
               <div className="relative z-10 max-w-6xl mx-auto">
                 {/* Mobile Swiper View (up to md screens) */}
@@ -232,7 +216,7 @@ const ChefRecommendationsModal = ({
                       delay: 4000,
                       disableOnInteraction: false,
                     }}
-                    className="chef-recommendations-swiper pb-8"
+                    className={`${styles.chefRecommendationsSwiper} pb-8`}
                   >
                     {recommendations.map((combo, index) => {
                       const isAdding = addingCombo === combo.id

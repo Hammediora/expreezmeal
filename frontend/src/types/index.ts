@@ -247,5 +247,7 @@ export const APP_CONFIG = {
   APP_NAME: 'ExpreeZmeal',
   CURRENCY: '$',
   TAX_RATE: 0.0875, // 8.75% sales tax (typical for Chicago)
-  DEFAULT_TIP_PERCENTAGE: 15,
+  DEFAULT_TIP_PERCENTAGE: typeof process.env.NEXT_PUBLIC_DEFAULT_TIP_PERCENTAGE !== 'undefined'
+    ? Number(process.env.NEXT_PUBLIC_DEFAULT_TIP_PERCENTAGE)
+    : 15,
 } as const
