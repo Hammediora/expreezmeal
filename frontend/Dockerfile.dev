@@ -1,18 +1,22 @@
 FROM node:18-alpine
 
+# Create non-root user
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
 WORKDIR /app
 
-# Copy package files
+# Install dependencies first to leverage cache
 COPY package*.json ./
-
-# Install dependencies
 RUN npm ci
 
-# Copy source code
+# Copy only necessary files
 COPY . .
 
-# Expose port
+# Build before run for faster dev startup
+RUN npm run build
+
 EXPOSE 3000
 
-# Start development server
+USER appuser
+
 CMD ["npm", "run", "dev"]
